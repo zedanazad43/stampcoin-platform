@@ -7,9 +7,15 @@ app = 'stampcoin-platform'
 primary_region = 'fra'
 
 [env]
-  VITE_OAUTH_PORTAL_URL = "http://localhost:4000"
+  # TODO: Update with your actual OAuth server URL in production
+  VITE_OAUTH_PORTAL_URL = "https://oauth.yourdomain.com"
   VITE_APP_ID = "stampcoin-platform"
   NODE_ENV = "production"
+  
+  # Note: Sensitive secrets should be set via flyctl secrets:
+  # flyctl secrets set STRIPE_SECRET_KEY=sk_live_xxx
+  # flyctl secrets set DATABASE_URL=mysql://...
+  # flyctl secrets set JWT_SECRET=your-secure-secret
 
 [build]
 
