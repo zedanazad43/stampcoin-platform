@@ -7,8 +7,8 @@ app = 'stampcoin-platform'
 primary_region = 'fra'
 
 [env]
-  # TODO: Update with your actual OAuth server URL in production
-  VITE_OAUTH_PORTAL_URL = "https://oauth.yourdomain.com"
+  # OAuth server URL - update with your actual OAuth server
+  VITE_OAUTH_PORTAL_URL = "https://stampcoin-oauth.fly.dev"
   VITE_APP_ID = "stampcoin-platform"
   NODE_ENV = "production"
   
