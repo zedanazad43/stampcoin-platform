@@ -103,8 +103,8 @@ export default function ExpertDashboard() {
                 <Badge variant="default">{workload?.activeAssignments || 0}</Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Completed</span>
-                <Badge variant="secondary">{workload?.completedAssignments || 0}</Badge>
+                <span className="text-sm font-medium">Completed Today</span>
+                <Badge variant="secondary">{workload?.completedToday || 0}</Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Average Completion Time</span>

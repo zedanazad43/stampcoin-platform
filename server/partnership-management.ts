@@ -330,7 +330,7 @@ export async function getPartnershipDashboard(partnerId: number): Promise<{
         id: partnerId,
         organizationType: 'institution',
         organizationName: 'Unknown partner',
-        status: 'pending',
+        status: 'proposed' as const,
         contractSigned: false,
         revenueShare: 70,
         startDate: new Date(),
@@ -358,7 +358,7 @@ export async function getPartnershipDashboard(partnerId: number): Promise<{
         id: partnerId,
         organizationType: 'institution',
         organizationName: 'Unknown partner',
-        status: 'pending',
+        status: 'proposed' as const,
         contractSigned: false,
         revenueShare: 70,
         startDate: new Date(),
@@ -458,7 +458,11 @@ export async function getPartnershipDashboard(partnerId: number): Promise<{
       monthlyGrowth: Number(monthlyGrowth.toFixed(2)),
     },
     topStamps,
-    recentActivity,
+    recentActivity: recentActivity.map(a => ({
+      type: a.type as 'upload' | 'payment' | 'sale' | 'review',
+      description: a.description,
+      date: a.date
+    })),
   };
 }
 

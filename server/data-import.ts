@@ -172,16 +172,16 @@ export async function downloadAndProcessImage(
     const metadata = await image.metadata();
 
     // Resize if needed (maintain aspect ratio)
-    let processedBuffer = buffer;
+    let processedBuffer: Buffer = buffer;
     if (metadata.width && metadata.height) {
       if (metadata.width > targetSize.width || metadata.height > targetSize.height) {
-        processedBuffer = await image
+        processedBuffer = Buffer.from(await image
           .resize(targetSize.width, targetSize.height, {
             fit: 'inside',
             withoutEnlargement: true,
           })
           .jpeg({ quality: 95 })
-          .toBuffer();
+          .toBuffer());
       }
     }
 

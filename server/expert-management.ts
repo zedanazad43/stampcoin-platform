@@ -32,14 +32,14 @@ export interface ExpertApplication {
   userId: number;
   expertiseAreas: string[];
   credentials: string;
-  experience: string;
-  references: Array<{
+  experience?: string;
+  references?: Array<{
     name: string;
     organization: string;
     contact: string;
   }>;
-  certifications: string[]; // URLs to cert documents
-  motivation: string;
+  certifications?: string[]; // URLs to cert documents
+  motivation?: string;
 }
 
 export interface AssignmentRequest {
@@ -111,12 +111,12 @@ export async function applyAsExpert(application: ExpertApplication): Promise<{
 
   const [result] = await db.insert(expertApplications).values({
     userId: application.userId,
-    expertiseAreas: stringifyJson(application.expertiseAreas),
+    expertiseAreas: stringifyJson(application.expertiseAreas) ?? '',
     credentials: application.credentials,
-    experience: application.experience,
-    references: stringifyJson(application.references),
-    certifications: stringifyJson(application.certifications),
-    motivation: application.motivation,
+    experience: application.experience ?? null,
+    references: stringifyJson(application.references ?? []),
+    certifications: stringifyJson(application.certifications ?? []),
+    motivation: application.motivation ?? null,
     status: 'pending',
   });
 
@@ -468,7 +468,7 @@ export async function submitExpertReview(review: {
   if (newAverage !== null) {
     await db
       .update(users)
-      .set({ expertRating: newAverage })
+      .set({ expertRating: newAverage.toFixed(2) })
       .where(eq(users.id, review.expertId));
   }
 
