@@ -8,6 +8,9 @@ import { storagePut } from "./storage";
 import { randomBytes } from "crypto";
 import Stripe from 'stripe';
 import { STAMP_PRODUCTS } from './products';
+import * as nftMinting from './nft-minting';
+import * as authentication from './authentication';
+import * as appraisal from './appraisal';
 
 function createTestStripeMock() {
   return {
@@ -407,6 +410,222 @@ export const appRouter = router({
           throw new Error('Unauthorized');
         }
         return await db.markMessageAsRead(input.id);
+      }),
+  }),
+
+  // NFT Management
+  nft: router({
+    mintStamp: protectedProcedure
+      .input(z.object({
+        stampId: z.number(),
+        blockchainNetwork: z.enum(['ethereum', 'polygon', 'solana', 'arbitrum']),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const stamp = await db.getStampById(input.stampId);
+          if (!stamp) {
+            throw new Error('Stamp not found');
+          }
+
+          // Check if already minted
+          if (stamp.nftTokenId) {
+            throw new Error('This stamp has already been minted as an NFT');
+          }
+
+          // Prepare minting request
+          const mintingRequest: nftMinting.MintingRequest = {
+            stampId: input.stampId,
+            userId: ctx.user.id,
+            blockchainNetwork: input.blockchainNetwork,
+            imageUrl: stamp.imageUrl || '',
+            title: stamp.title,
+            description: stamp.description || '',
+            attributes: {
+              country: stamp.country,
+              year: stamp.year,
+              rarity: stamp.rarity,
+              designer: stamp.designer,
+              issuedBy: stamp.issuedBy,
+              denomination: stamp.denomination,
+              condition: stamp.condition,
+            },
+          };
+
+          // Mint NFT
+          const result = await nftMinting.mintNft(mintingRequest);
+
+          if (!result.success) {
+            throw new Error(result.errorMessage || 'Minting failed');
+          }
+
+          // Update stamp with NFT data
+          await db.updateStamp(input.stampId, {
+            nftTokenId: result.tokenId,
+            nftContractAddress: result.contractAddress,
+            nftMetadataUri: result.metadataUri,
+            blockchainNetwork: input.blockchainNetwork,
+            mintedAt: new Date(),
+          });
+
+          return {
+            success: true,
+            tokenId: result.tokenId,
+            contractAddress: result.contractAddress,
+            transactionHash: result.transactionHash,
+            metadataUri: result.metadataUri,
+          };
+        } catch (error: any) {
+          console.error('[NFT] Minting error:', error);
+          throw new Error(error.message || 'Failed to mint NFT');
+        }
+      }),
+
+    estimateCost: publicProcedure
+      .input(z.object({
+        blockchainNetwork: z.enum(['ethereum', 'polygon', 'solana', 'arbitrum']),
+      }))
+      .query(async ({ input }) => {
+        return await nftMinting.estimateMintingCost(input.blockchainNetwork);
+      }),
+
+    getMetadata: publicProcedure
+      .input(z.object({ stampId: z.number() }))
+      .query(async ({ input }) => {
+        const stamp = await db.getStampById(input.stampId);
+        if (!stamp) {
+          throw new Error('Stamp not found');
+        }
+        return nftMinting.generateNftMetadata(stamp);
+      }),
+  }),
+
+  // Authentication & Verification
+  authentication: router({
+    requestVerification: protectedProcedure
+      .input(z.object({
+        stampId: z.number(),
+        authenticationType: z.enum(['expert_review', 'certificate_scan', 'ai_analysis', 'blockchain_provenance', 'third_party']),
+        supportingDocuments: z.array(z.string()).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const stamp = await db.getStampById(input.stampId);
+        if (!stamp) {
+          throw new Error('Stamp not found');
+        }
+
+        const result = await authentication.requestAuthentication({
+          stampId: input.stampId,
+          userId: ctx.user.id,
+          authenticationType: input.authenticationType,
+          supportingDocuments: input.supportingDocuments,
+          notes: input.notes,
+        });
+
+        return result;
+      }),
+
+    submitVerification: protectedProcedure
+      .input(z.object({
+        authenticationId: z.number(),
+        status: z.enum(['verified', 'rejected', 'disputed']),
+        confidenceScore: z.number().min(0).max(100),
+        findings: z.string(),
+        certificateUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Only admins or verified experts can submit verifications
+        if (ctx.user.role !== 'admin') {
+          throw new Error('Unauthorized - Only experts can submit verifications');
+        }
+
+        const result = await authentication.submitVerification({
+          authenticationId: input.authenticationId,
+          verifierId: ctx.user.id,
+          verifierName: ctx.user.name || 'Anonymous Expert',
+          verifierCredentials: 'Platform Verified Expert',
+          status: input.status,
+          confidenceScore: input.confidenceScore,
+          findings: input.findings,
+          certificateUrl: input.certificateUrl,
+        });
+
+        return result;
+      }),
+
+    analyzeImage: protectedProcedure
+      .input(z.object({
+        imageUrl: z.string().url(),
+      }))
+      .mutation(async ({ input }) => {
+        return await authentication.analyzeStampImage(input.imageUrl);
+      }),
+
+    getStatus: publicProcedure
+      .input(z.object({ stampId: z.number() }))
+      .query(async ({ input }) => {
+        return await authentication.getAuthenticationStatus(input.stampId);
+      }),
+  }),
+
+  // Appraisal & Valuation
+  appraisal: router({
+    requestAppraisal: protectedProcedure
+      .input(z.object({
+        stampId: z.number(),
+        appraisalType: z.enum(['formal', 'informal', 'market_based', 'ai_estimated']),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const stamp = await db.getStampById(input.stampId);
+        if (!stamp) {
+          throw new Error('Stamp not found');
+        }
+
+        const result = await appraisal.requestAppraisal({
+          stampId: input.stampId,
+          userId: ctx.user.id,
+          appraisalType: input.appraisalType,
+          requestedBy: ctx.user.name || ctx.user.email || 'User',
+        });
+
+        return result;
+      }),
+
+    getQuickEstimate: publicProcedure
+      .input(z.object({ stampId: z.number() }))
+      .query(async ({ input }) => {
+        const stamp = await db.getStampById(input.stampId);
+        if (!stamp) {
+          throw new Error('Stamp not found');
+        }
+
+        return await appraisal.getAiEstimate({
+          rarity: stamp.rarity,
+          year: stamp.year || undefined,
+          country: stamp.country || undefined,
+          condition: stamp.condition || undefined,
+          lastSoldPrice: stamp.lastSoldPrice?.toString(),
+        });
+      }),
+
+    getValuationHistory: publicProcedure
+      .input(z.object({ stampId: z.number() }))
+      .query(async ({ input }) => {
+        return await appraisal.getValuationHistory(input.stampId);
+      }),
+
+    getMarketTrends: publicProcedure
+      .input(z.object({
+        category: z.string().optional(),
+        country: z.string().optional(),
+        yearRange: z.tuple([z.number(), z.number()]).optional(),
+      }))
+      .query(async ({ input }) => {
+        return await appraisal.analyzeMarketTrends({
+          category: input.category,
+          country: input.country,
+          yearRange: input.yearRange,
+        });
       }),
   }),
 

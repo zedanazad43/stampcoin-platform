@@ -31,6 +31,10 @@ export const categories = mysqlTable("categories", {
   nameZh: varchar("nameZh", { length: 100 }),
   nameKo: varchar("nameKo", { length: 100 }),
   description: text("description"),
+  parentId: int("parentId"), // For hierarchical categories
+  continent: varchar("continent", { length: 50 }),
+  region: varchar("region", { length: 100 }),
+  icon: varchar("icon", { length: 200 }), // Icon/emoji for UI
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -69,6 +73,48 @@ export const stamps = mysqlTable("stamps", {
   authenticationDate: timestamp("authenticationDate"),
   mintNumber: int("mintNumber"),
   totalMinted: int("totalMinted"),
+  
+  // NFT Blockchain Metadata
+  nftTokenId: varchar("nftTokenId", { length: 100 }),
+  nftContractAddress: varchar("nftContractAddress", { length: 100 }),
+  blockchainNetwork: varchar("blockchainNetwork", { length: 50 }), // ethereum, polygon, solana, etc.
+  mintedAt: timestamp("mintedAt"),
+  nftMetadataUri: text("nftMetadataUri"), // IPFS or Arweave URI
+  
+  // Authentication & Verification
+  authenticationStatus: mysqlEnum("authenticationStatus", ["pending", "verified", "rejected", "expired"]),
+  authenticationType: mysqlEnum("authenticationType", ["expert_review", "certificate_scan", "ai_analysis", "blockchain_provenance", "third_party"]),
+  physicalStampId: varchar("physicalStampId", { length: 100 }), // Links to physical original
+  certificateNumber: varchar("certificateNumber", { length: 100 }),
+  
+  // Valuation & Appraisal
+  appraisalValue: decimal("appraisalValue", { precision: 12, scale: 2 }),
+  appraisalDate: timestamp("appraisalDate"),
+  appraisedBy: varchar("appraisedBy", { length: 200 }),
+  
+  // Geographic & Origin Data
+  continent: varchar("continent", { length: 50 }),
+  region: varchar("region", { length: 100 }),
+  issuedBy: varchar("issuedBy", { length: 200 }),
+  denomination: varchar("denomination", { length: 100 }),
+  
+  // Physical Characteristics
+  color: varchar("color", { length: 100 }),
+  perforation: varchar("perforation", { length: 100 }),
+  watermark: varchar("watermark", { length: 200 }),
+  printingMethod: varchar("printingMethod", { length: 100 }),
+  designer: varchar("designer", { length: 200 }),
+  engraver: varchar("engraver", { length: 200 }),
+  quantity: int("quantity"), // Original print run
+  condition: varchar("condition", { length: 50 }), // mint, near_mint, excellent, good, fair, poor
+  
+  // Historical & Market Data
+  historicalSignificance: text("historicalSignificance"),
+  marketTrend: mysqlEnum("marketTrend", ["rising", "stable", "declining", "volatile"]),
+  estimatedValue: decimal("estimatedValue", { precision: 12, scale: 2 }),
+  lastSoldPrice: decimal("lastSoldPrice", { precision: 12, scale: 2 }),
+  lastSoldDate: timestamp("lastSoldDate"),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -202,3 +248,98 @@ export const partnerTransactions = mysqlTable("partnerTransactions", {
 
 export type PartnerTransaction = typeof partnerTransactions.$inferSelect;
 export type InsertPartnerTransaction = typeof partnerTransactions.$inferInsert;
+
+/**
+ * Stamp Authentications table for tracking verification process
+ */
+export const stampAuthentications = mysqlTable("stampAuthentications", {
+  id: int("id").autoincrement().primaryKey(),
+  stampId: int("stampId").notNull().references(() => stamps.id, { onDelete: 'cascade' }),
+  verifierId: int("verifierId").references(() => users.id), // Expert/authenticator user
+  verifierName: varchar("verifierName", { length: 200 }).notNull(),
+  verifierCredentials: text("verifierCredentials"),
+  authenticationType: mysqlEnum("authenticationType", ["expert_review", "certificate_scan", "ai_analysis", "blockchain_provenance", "third_party"]).notNull(),
+  status: mysqlEnum("status", ["pending", "in_progress", "verified", "rejected", "disputed"]).default("pending").notNull(),
+  confidenceScore: int("confidenceScore"), // 0-100
+  findings: text("findings"),
+  supportingDocuments: text("supportingDocuments"), // JSON array of document URLs
+  certificateIssued: boolean("certificateIssued").default(false),
+  certificateUrl: text("certificateUrl"),
+  verificationDate: timestamp("verificationDate"),
+  expiryDate: timestamp("expiryDate"),
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StampAuthentication = typeof stampAuthentications.$inferSelect;
+export type InsertStampAuthentication = typeof stampAuthentications.$inferInsert;
+
+/**
+ * Stamp Appraisals table for tracking valuations over time
+ */
+export const stampAppraisals = mysqlTable("stampAppraisals", {
+  id: int("id").autoincrement().primaryKey(),
+  stampId: int("stampId").notNull().references(() => stamps.id, { onDelete: 'cascade' }),
+  appraiserId: int("appraiserId").references(() => users.id),
+  appraiserName: varchar("appraiserName", { length: 200 }).notNull(),
+  appraiserCredentials: text("appraiserCredentials"),
+  appraisalType: mysqlEnum("appraisalType", ["formal", "informal", "market_based", "ai_estimated", "auction_result"]).notNull(),
+  estimatedValue: decimal("estimatedValue", { precision: 12, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("USD").notNull(),
+  valuationMethod: varchar("valuationMethod", { length: 200 }),
+  marketConditions: text("marketConditions"),
+  comparableSales: text("comparableSales"), // JSON array of comparable sales data
+  factors: text("factors"), // JSON of factors affecting value
+  report: text("report"),
+  reportUrl: text("reportUrl"),
+  validUntil: timestamp("validUntil"),
+  confidenceLevel: mysqlEnum("confidenceLevel", ["low", "medium", "high", "very_high"]),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StampAppraisal = typeof stampAppraisals.$inferSelect;
+export type InsertStampAppraisal = typeof stampAppraisals.$inferInsert;
+
+/**
+ * NFT Minting History table
+ */
+export const nftMintingHistory = mysqlTable("nftMintingHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  stampId: int("stampId").notNull().references(() => stamps.id, { onDelete: 'cascade' }),
+  userId: int("userId").notNull().references(() => users.id),
+  blockchainNetwork: varchar("blockchainNetwork", { length: 50 }).notNull(),
+  contractAddress: varchar("contractAddress", { length: 100 }).notNull(),
+  tokenId: varchar("tokenId", { length: 100 }).notNull(),
+  transactionHash: varchar("transactionHash", { length: 200 }),
+  metadataUri: text("metadataUri"),
+  imageUri: text("imageUri"),
+  mintingStatus: mysqlEnum("mintingStatus", ["preparing", "pending", "minting", "minted", "failed"]).default("preparing").notNull(),
+  gasFee: decimal("gasFee", { precision: 18, scale: 8 }),
+  gasCurrency: varchar("gasCurrency", { length: 10 }),
+  errorMessage: text("errorMessage"),
+  mintedAt: timestamp("mintedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type NftMintingHistory = typeof nftMintingHistory.$inferSelect;
+export type InsertNftMintingHistory = typeof nftMintingHistory.$inferInsert;
+
+/**
+ * Stamp Provenance table for tracking ownership history
+ */
+export const stampProvenance = mysqlTable("stampProvenance", {
+  id: int("id").autoincrement().primaryKey(),
+  stampId: int("stampId").notNull().references(() => stamps.id, { onDelete: 'cascade' }),
+  previousOwnerId: int("previousOwnerId").references(() => users.id),
+  newOwnerId: int("newOwnerId").references(() => users.id),
+  transactionId: int("transactionId").references(() => transactions.id),
+  transferType: mysqlEnum("transferType", ["sale", "gift", "inheritance", "auction", "trade", "initial_mint"]).notNull(),
+  transferDate: timestamp("transferDate").defaultNow().notNull(),
+  verificationDocument: text("verificationDocument"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StampProvenance = typeof stampProvenance.$inferSelect;
+export type InsertStampProvenance = typeof stampProvenance.$inferInsert;
