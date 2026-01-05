@@ -12,6 +12,7 @@ import { Sparkles, Search, Filter, Heart } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { formatRarity, getDisplayStamps, type Stamp } from "@/lib/marketplace-utils";
 
 export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,7 +20,7 @@ export default function Marketplace() {
   const [selectedRarity, setSelectedRarity] = useState<string>("");
 
   // Featured samples shown when API returns empty to keep the page rich with content
-  const featuredStamps = [
+  const featuredStamps: Stamp[] = [
     {
       id: 1001,
       title: "Blue Mauritius (1847)",
@@ -66,19 +67,11 @@ export default function Marketplace() {
 
   const { data: categories } = trpc.categories.list.useQuery();
 
-  const displayStamps = stamps && stamps.length > 0 ? stamps : featuredStamps;
-  const isEmpty = !isLoading && (!stamps || stamps.length === 0);
-
-  const formatRarity = (rarity: string) => {
-    const map: Record<string, string> = {
-      common: "Common",
-      uncommon: "Uncommon",
-      rare: "Rare",
-      very_rare: "Very Rare",
-      legendary: "Legendary",
-    };
-    return map[rarity] || rarity;
-  };
+  const { display: displayStamps, isEmpty } = getDisplayStamps({
+    stamps,
+    featured: featuredStamps,
+    isLoading,
+  });
 
   return (
     <div className="min-h-screen bg-rare-stamps">
@@ -246,7 +239,7 @@ export default function Marketplace() {
               <Sparkles className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <p className="text-xl font-medium text-foreground mb-2">No stamps found</p>
               <p className="text-muted-foreground mb-6">
-                Try adjusting your search or filter criteria. We 27ve curated featured stamps for you below.
+                Try adjusting your search or filter criteria. We've curated featured stamps for you below.
               </p>
               <div className="max-w-3xl mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -254,7 +247,7 @@ export default function Marketplace() {
                     <Card key={`featured-${stamp.id}`} className="border-border/50 bg-card/80 backdrop-blur-sm">
                       <CardContent className="p-4">
                         <h4 className="font-semibold text-lg mb-1">{stamp.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-2">{stamp.country}  95 {stamp.year}</p>
+                        <p className="text-sm text-muted-foreground mb-2">{stamp.country} - {stamp.year}</p>
                         <p className="text-sm text-primary font-bold mb-2">${stamp.price}</p>
                         <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-background/60">
                           {formatRarity(stamp.rarity)}

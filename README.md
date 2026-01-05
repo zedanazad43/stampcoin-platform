@@ -61,7 +61,7 @@ A revolutionary blockchain-powered NFT marketplace for digital asset ownership a
 
 3. **Configure environment variables**
    
-   Create a `.env` file in the root directory:
+   Create a `.env` file in the root directory (see `.env.example` for the full list):
    ```env
    # Database
    DATABASE_URL=mysql://user:password@host:port/database
@@ -76,11 +76,18 @@ A revolutionary blockchain-powered NFT marketplace for digital asset ownership a
    AWS_SECRET_ACCESS_KEY=your_secret_key
    AWS_REGION=us-east-1
    AWS_S3_BUCKET=your-bucket-name
+   CDN_BASE_URL=
    
-   # Session
+   # Session / Auth
    JWT_SECRET=your-random-secret-key
+   OWNER_OPEN_ID=your-owner-open-id
+   OAUTH_SERVER_URL=https://oauth.example.com
+   VITE_OAUTH_PORTAL_URL=http://localhost:4000
+   VITE_APP_ID=stampcoin-platform
    
-
+   # Analytics (Umami)
+   VITE_ANALYTICS_ENDPOINT=https://analytics.example.com
+   VITE_ANALYTICS_WEBSITE_ID=your-website-id
    
    # Node
    NODE_ENV=development
@@ -109,7 +116,7 @@ npm run build:frontend
 # Build backend
 npm run build
 
-# Start production server
+# Start production server (will build if not already built via prestart)
 npm start
 ```
 
