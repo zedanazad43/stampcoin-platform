@@ -10,7 +10,9 @@ import Stripe from 'stripe';
 import { STAMP_PRODUCTS } from './products';
 import * as nftMinting from './nft-minting';
 import * as authentication from './authentication';
-import * as appraisal from './appraisal';import * as expertManagement from "./expert-management";
+import * as appraisal from './appraisal';
+import * as expertManagement from "./expert-management";
+import * as partnershipManagement from "./partnership-management";
 function createTestStripeMock() {
   return {
     checkout: {
@@ -881,6 +883,97 @@ export const appRouter = router({
           throw new Error('Unauthorized');
         }
         return await expertManagement.autoAssignPendingTasks();
+      }),
+  }),
+
+  // Partnership Management
+  partnerships: router({
+    // Submit partnership proposal
+    submitProposal: protectedProcedure
+      .input(z.object({
+        organizationType: z.enum(['auction_house', 'museum', 'postal_service', 'dealer', 'collector_society', 'academic']),
+        organizationName: z.string(),
+        country: z.string(),
+        contactPerson: z.string(),
+        contactEmail: z.string().email(),
+        contactPhone: z.string().optional(),
+        proposedCollaboration: z.string(),
+        collectionSize: z.number().optional(),
+        digitalizationCapability: z.boolean(),
+        authenticationCapability: z.boolean(),
+        marketAccess: z.array(z.string()),
+        revenueShareProposal: z.number().optional(),
+        exclusivityRequested: z.boolean(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return await partnershipManagement.submitProposal({
+          ...input,
+          userId: ctx.user.id,
+        });
+      }),
+
+    // Get partnership dashboard
+    getDashboard: protectedProcedure
+      .input(z.object({ partnerId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        // Only allow users to view their own partner dashboard or admins
+        if (ctx.user.role !== 'admin') {
+          const partner = await db.getPartnerByUserId(ctx.user.id);
+          if (!partner || partner.id !== input.partnerId) {
+            throw new Error('Unauthorized');
+          }
+        }
+        return await partnershipManagement.getPartnershipDashboard(input.partnerId);
+      }),
+
+    // Get partnership metrics
+    getMetrics: protectedProcedure
+      .input(z.object({ partnerId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          const partner = await db.getPartnerByUserId(ctx.user.id);
+          if (!partner || partner.id !== input.partnerId) {
+            throw new Error('Unauthorized');
+          }
+        }
+        return await partnershipManagement.trackPartnerMetrics(input.partnerId);
+      }),
+
+    // Generate partnership report
+    generateReport: protectedProcedure
+      .input(z.object({
+        partnerId: z.number(),
+        period: z.enum(['monthly', 'quarterly', 'annual']),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          const partner = await db.getPartnerByUserId(ctx.user.id);
+          if (!partner || partner.id !== input.partnerId) {
+            throw new Error('Unauthorized');
+          }
+        }
+        return await partnershipManagement.generatePartnershipReport(
+          input.partnerId,
+          input.period
+        );
+      }),
+
+    // Calculate revenue share (admin only)
+    calculateRevenue: protectedProcedure
+      .input(z.object({
+        partnerId: z.number(),
+        startDate: z.date(),
+        endDate: z.date(),
+      }))
+      .query(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new Error('Unauthorized: Admin access required');
+        }
+        return await partnershipManagement.calculateRevenueShare(
+          input.partnerId,
+          input.startDate,
+          input.endDate
+        );
       }),
   }),
 });

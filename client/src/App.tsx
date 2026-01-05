@@ -14,6 +14,11 @@ import StampDetail from "./pages/StampDetail";
 import Dashboard from "./pages/Dashboard";
 import Partners from "./pages/Partners";
 import PaymentResult from "./pages/PaymentResult";
+import ExpertApplication from "./pages/ExpertApplication";
+import ExpertDashboard from "./pages/ExpertDashboard";
+import ExpertLeaderboard from "./pages/ExpertLeaderboard";
+import PartnershipProposal from "./pages/PartnershipProposal";
+import PartnerDashboard from "./pages/PartnerDashboard";
 
 function Router() {
   return (
@@ -27,6 +32,11 @@ function Router() {
       <Route path={"/investors"} component={Investors} />
       <Route path={"/contact"} component={Contact} />
       <Route path={"/partners"} component={Partners} />
+      <Route path={"/expert/apply"} component={ExpertApplication} />
+      <Route path={"/expert/dashboard"} component={ExpertDashboard} />
+      <Route path={"/expert/leaderboard"} component={ExpertLeaderboard} />
+      <Route path={"/partnership/propose"} component={PartnershipProposal} />
+      <Route path={"/partnership/dashboard"} component={PartnerDashboard} />
       <Route path={"payment-result"} component={PaymentResult} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
