@@ -12,7 +12,9 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "init:archive": "tsx server/scripts/init-archive.ts",
+    "export:stamps": "tsx server/scripts/export-stamps-json.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
@@ -54,7 +56,9 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cookie": "^1.0.2",
+    "csv-parse": "^5.6.0",
     "date-fns": "^4.1.0",
+    "decimal.js": "^10.6.0",
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",
     "embla-carousel-react": "^8.6.0",
@@ -72,14 +76,13 @@
     "react-hook-form": "^7.64.0",
     "react-resizable-panels": "^3.0.6",
     "recharts": "^2.15.2",
-    "csv-parse": "^5.6.0",
+    "sharp": "^0.33.5",
     "sonner": "^2.0.7",
     "streamdown": "^1.4.0",
     "stripe": "^20.1.0",
     "superjson": "^1.13.3",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "sharp": "^0.33.5",
     "vaul": "^1.1.2",
     "wouter": "^3.3.5",
     "zod": "^4.1.12"

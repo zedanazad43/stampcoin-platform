@@ -19,26 +19,34 @@ import ExpertDashboard from "./pages/ExpertDashboard";
 import ExpertLeaderboard from "./pages/ExpertLeaderboard";
 import PartnershipProposal from "./pages/PartnershipProposal";
 import PartnerDashboard from "./pages/PartnerDashboard";
+import MintStamps from "./pages/MintStamps";
+import StampArchive from "./pages/StampArchive";
+import StampCoinEconomy from "./pages/StampCoinEconomy";
+import StampLanding from "./pages/StampLanding";
 
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/marketplace"} component={Marketplace} />
-      <Route path={"/stamp/:id"} component={StampDetail} />
-      <Route path={"/dashboard"} component={Dashboard} />
-      <Route path={"/gallery"} component={Gallery} />
-      <Route path={"/about"} component={About} />
-      <Route path={"/investors"} component={Investors} />
-      <Route path={"/contact"} component={Contact} />
-      <Route path={"/partners"} component={Partners} />
-      <Route path={"/expert/apply"} component={ExpertApplication} />
-      <Route path={"/expert/dashboard"} component={ExpertDashboard} />
-      <Route path={"/expert/leaderboard"} component={ExpertLeaderboard} />
-      <Route path={"/partnership/propose"} component={PartnershipProposal} />
-      <Route path={"/partnership/dashboard"} component={PartnerDashboard} />
-      <Route path={"payment-result"} component={PaymentResult} />
-      <Route path={"/404"} component={NotFound} />
+      <Route path="/" component={Home} />
+      <Route path="/stamps" component={StampLanding} />
+      <Route path="/marketplace" component={Marketplace} />
+      <Route path="/stamp/:id" component={StampDetail} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/gallery" component={Gallery} />
+      <Route path="/mint" component={MintStamps} />
+      <Route path="/archive" component={StampArchive} />
+      <Route path="/economy" component={StampCoinEconomy} />
+      <Route path="/about" component={About} />
+      <Route path="/investors" component={Investors} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/partners" component={Partners} />
+      <Route path="/expert/apply" component={ExpertApplication} />
+      <Route path="/expert/dashboard" component={ExpertDashboard} />
+      <Route path="/expert/leaderboard" component={ExpertLeaderboard} />
+      <Route path="/partnership/propose" component={PartnershipProposal} />
+      <Route path="/partnership/dashboard" component={PartnerDashboard} />
+      <Route path="/payment-result" component={PaymentResult} />
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );

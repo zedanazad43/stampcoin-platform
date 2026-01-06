@@ -415,3 +415,131 @@ export const expertReviews = mysqlTable("expertReviews", {
 
 export type ExpertReview = typeof expertReviews.$inferSelect;
 export type InsertExpertReview = typeof expertReviews.$inferInsert;
+/**
+ * Stamp Archive table - stores metadata for stamps imported from Internet Archive
+ */
+export const stampArchive = mysqlTable("stampArchive", {
+  id: int("id").autoincrement().primaryKey(),
+  archiveId: varchar("archiveId", { length: 200 }).notNull().unique(),
+  country: varchar("country", { length: 100 }).notNull(),
+  denomination: decimal("denomination", { precision: 10, scale: 2 }).notNull(),
+  year: int("year").notNull(),
+  catalog: varchar("catalog", { length: 100 }).notNull(),
+  condition: mysqlEnum("condition", ["mint", "used", "fine", "very_fine"]).notNull(),
+  rarity: mysqlEnum("rarity", ["common", "uncommon", "rare", "very_rare", "legendary"]).notNull(),
+  description: text("description"),
+  imageHash: varchar("imageHash", { length: 200 }).notNull(), // IPFS hash
+  imageUrl: text("imageUrl").notNull(), // IPFS or Arweave URL
+  originalImageUrl: text("originalImageUrl"), // Original Internet Archive URL
+  usdValue: decimal("usdValue", { precision: 12, scale: 2 }).notNull(),
+  stampCoinValue: int("stampCoinValue").notNull(),
+  serialNumber: varchar("serialNumber", { length: 100 }).unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StampArchive = typeof stampArchive.$inferSelect;
+export type InsertStampArchive = typeof stampArchive.$inferInsert;
+
+/**
+ * Stamp Pricing History table - tracks price changes over time
+ */
+export const stampPricing = mysqlTable("stampPricing", {
+  id: int("id").autoincrement().primaryKey(),
+  stampId: int("stampId").notNull().references(() => stamps.id, { onDelete: 'cascade' }),
+  archiveId: varchar("archiveId", { length: 200 }).references(() => stampArchive.archiveId),
+  baseUsdPrice: decimal("baseUsdPrice", { precision: 12, scale: 2 }).notNull(),
+  stampCoinPrice: int("stampCoinPrice").notNull(),
+  conditionMultiplier: decimal("conditionMultiplier", { precision: 5, scale: 2 }).notNull(),
+  rarityMultiplier: decimal("rarityMultiplier", { precision: 5, scale: 2 }).notNull(),
+  finalPrice: decimal("finalPrice", { precision: 12, scale: 2 }).notNull(),
+  priceSource: mysqlEnum("priceSource", ["manual", "market_data", "ai_estimated", "appraisal", "auction_result"]).notNull(),
+  currency: varchar("currency", { length: 10 }).default("USD").notNull(),
+  validFrom: timestamp("validFrom").defaultNow().notNull(),
+  validUntil: timestamp("validUntil"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StampPricing = typeof stampPricing.$inferSelect;
+export type InsertStampPricing = typeof stampPricing.$inferInsert;
+
+/**
+ * NFT table - stores individual NFT records linked to stamps
+ */
+export const stampNFT = mysqlTable("stampNFT", {
+  id: int("id").autoincrement().primaryKey(),
+  stampId: int("stampId").references(() => stamps.id, { onDelete: 'set null' }),
+  archiveId: varchar("archiveId", { length: 200 }).references(() => stampArchive.archiveId),
+  serialNumber: varchar("serialNumber", { length: 100 }).notNull().unique(),
+  nftTokenId: varchar("nftTokenId", { length: 100 }).notNull().unique(),
+  contractAddress: varchar("contractAddress", { length: 100 }).notNull(),
+  blockchainNetwork: varchar("blockchainNetwork", { length: 50 }).notNull(),
+  ownerAddress: varchar("ownerAddress", { length: 100 }),
+  ownerId: int("ownerId").references(() => users.id),
+  metadataUri: text("metadataUri").notNull(), // IPFS or Arweave URI
+  imageUri: text("imageUri").notNull(),
+  nftType: mysqlEnum("nftType", ["collectible", "certificate", "deed", "license"]).default("collectible").notNull(),
+  mintedAt: timestamp("mintedAt").defaultNow().notNull(),
+  transactionHash: varchar("transactionHash", { length: 200 }),
+  gasUsed: decimal("gasUsed", { precision: 18, scale: 8 }),
+  gasCurrency: varchar("gasCurrency", { length: 10 }).default("ETH"),
+  royaltyPercentage: decimal("royaltyPercentage", { precision: 5, scale: 2 }).default("5.00"),
+  royaltyRecipient: varchar("royaltyRecipient", { length: 100 }),
+  totalTransactions: int("totalTransactions").default(0),
+  lastSoldAt: timestamp("lastSoldAt"),
+  lastSoldPrice: decimal("lastSoldPrice", { precision: 12, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StampNFT = typeof stampNFT.$inferSelect;
+export type InsertStampNFT = typeof stampNFT.$inferInsert;
+
+/**
+ * Platform Currency (StampCoin) table - tracks circulating supply
+ */
+export const platformCurrency = mysqlTable("platformCurrency", {
+  id: int("id").autoincrement().primaryKey(),
+  currencyName: varchar("currencyName", { length: 100 }).default("StampCoin").notNull(),
+  currencySymbol: varchar("currencySymbol", { length: 10 }).default("STMP").notNull(),
+  totalSupply: int("totalSupply").notNull(), // Total coins ever created
+  circulatingSupply: int("circulatingSupply").notNull(), // Currently in circulation
+  maxSupply: int("maxSupply"), // Hard cap on coins
+  burnedSupply: int("burnedSupply").default(0), // Total coins burned
+  priceUSD: decimal("priceUSD", { precision: 10, scale: 4 }).default("0.1000"),
+  marketCap: decimal("marketCap", { precision: 18, scale: 2 }),
+  volumeUSD: decimal("volumeUSD", { precision: 18, scale: 2 }),
+  pegged: boolean("pegged").default(true), // Is it 1:1 pegged to value?
+  pegValue: varchar("pegValue", { length: 100 }).default("0.1 USD"), // What is it pegged to?
+  contractAddress: varchar("contractAddress", { length: 100 }),
+  blockchainNetwork: varchar("blockchainNetwork", { length: 50 }),
+  totalStampsInArchive: int("totalStampsInArchive").default(0),
+  totalNFTsMinted: int("totalNFTsMinted").default(0),
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PlatformCurrency = typeof platformCurrency.$inferSelect;
+export type InsertPlatformCurrency = typeof platformCurrency.$inferInsert;
+
+/**
+ * Currency Distribution Ledger - tracks how StampCoins are distributed
+ */
+export const currencyDistribution = mysqlTable("currencyDistribution", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").references(() => users.id, { onDelete: 'set null' }),
+  archiveId: varchar("archiveId", { length: 200 }).references(() => stampArchive.archiveId),
+  nftId: int("nftId").references(() => stampNFT.id),
+  distributionType: mysqlEnum("distributionType", ["mint", "purchase", "trade", "reward", "burn", "transfer"]).notNull(),
+  amount: int("amount").notNull(), // Amount of StampCoins
+  usdValue: decimal("usdValue", { precision: 12, scale: 2 }),
+  relatedTransactionId: int("relatedTransactionId"),
+  description: text("description"),
+  status: mysqlEnum("status", ["pending", "completed", "failed"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+
+export type CurrencyDistribution = typeof currencyDistribution.$inferSelect;
+export type InsertCurrencyDistribution = typeof currencyDistribution.$inferInsert;

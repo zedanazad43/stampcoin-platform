@@ -13,6 +13,7 @@ import * as authentication from './authentication';
 import * as appraisal from './appraisal';
 import * as expertManagement from "./expert-management";
 import * as partnershipManagement from "./partnership-management";
+import { archiveRouter } from "./archive-router";
 function createTestStripeMock() {
   return {
     checkout: {
@@ -42,6 +43,7 @@ const stripe = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.st
 
 export const appRouter = router({
   system: systemRouter,
+  archive: archiveRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

@@ -1,6 +1,0 @@
-{
-  "buildCommand": "pnpm install && pnpm run build:frontend",
-  "outputDirectory": "dist/public",
-  "framework": null,
-  "installCommand": "pnpm install"
-}

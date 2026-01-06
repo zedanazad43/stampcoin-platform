@@ -1,4 +1,4 @@
-#!/bin/bash
+
 
 # Polygon Mainnet Deployment Script
 # This script will guide you through deploying StampCoinNFT to Polygon mainnet
@@ -65,16 +65,7 @@ echo "Checking wallet balance..."
 cd /workspaces/Stampcoin-platform/contracts
 
 # Try to get balance (this will fail if RPC is unreachable)
-BALANCE=$(npx hardhat run --network polygon << 'CHECKBALANCE'
-const { ethers } = require("hardhat");
-async function main() {
-  const [deployer] = await ethers.getSigners();
-  const balance = await ethers.provider.getBalance(deployer.address);
-  console.log(ethers.formatEther(balance));
-}
-main().catch(() => process.exit(1));
-CHECKBALANCE
-) || {
+BALANCE=$(npx hardhat run scripts/check-balance.js --network polygon 2>&1) || {
     echo -e "${RED}❌ Could not connect to Polygon network${NC}"
     echo "Check your POLYGON_RPC_URL in .env"
     exit 1
