@@ -79,11 +79,24 @@ const EXCLUDE_PATTERNS = [
   /yarn\.lock/,
   /\.log$/,
   /\.md$/,
+  /\.txt$/,
+  /\.json$/,
+  /\.sh$/,
   /verify-secrets\.js$/,
   /README_DEPLOY\.md$/,
   /badges/,
   /\.backup/,
-  /\.bak$/
+  /\.bak$/,
+  /backups/,
+  /contracts/,
+  /artifacts/,
+  /cache/,
+  /typechain-types/,
+  /patches/,
+  /\.sol$/,
+  /\.ts$/,
+  /\.tsx$/,
+  /\.jsx$/
 ];
 
 // Safe patterns that look like secrets but aren't
