@@ -72,8 +72,11 @@ async function pinToNFTStorage(name, description, imageBuffer, mimeType) {
     throw new Error('NFT_STORAGE_API_KEY is not configured');
   }
 
-  // Create form data boundary
-  const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
+  // Import crypto for secure random boundary
+  const crypto = await import('crypto');
+  
+  // Create form data boundary with cryptographically secure random
+  const boundary = `----WebKitFormBoundary${crypto.randomBytes(16).toString('hex')}`;
   
   // Build multipart form data
   const parts = [];
@@ -150,8 +153,11 @@ async function pinToPinata(name, description, imageBuffer, mimeType) {
     throw new Error('Pinata credentials not configured');
   }
 
-  // Create form data boundary
-  const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
+  // Import crypto for secure random boundary
+  const crypto = await import('crypto');
+  
+  // Create form data boundary with cryptographically secure random
+  const boundary = `----WebKitFormBoundary${crypto.randomBytes(16).toString('hex')}`;
   
   // Build multipart form data
   const parts = [];
@@ -317,6 +323,5 @@ export default async function handler(req, res) {
 // Alternative exports for different serverless platforms
 export { handler };
 
-// For CommonJS compatibility
-module.exports = handler;
-module.exports.default = handler;
+// Note: CommonJS exports removed as this is an ES module
+// For platforms requiring CommonJS, they should transpile this module

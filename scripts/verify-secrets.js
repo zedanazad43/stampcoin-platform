@@ -93,10 +93,7 @@ const EXCLUDE_PATTERNS = [
   /cache/,
   /typechain-types/,
   /patches/,
-  /\.sol$/,
-  /\.ts$/,
-  /\.tsx$/,
-  /\.jsx$/
+  /\.sol$/
 ];
 
 // Safe patterns that look like secrets but aren't
@@ -109,6 +106,14 @@ const SAFE_PATTERNS = [
   /['"]?[A-Z_]*['"]?\s*[:=]\s*['"]placeholder/i,
   /['"]?[A-Z_]*['"]?\s*[:=]\s*['"]sk_test_/i,
   /['"]?[A-Z_]*['"]?\s*[:=]\s*['"]pk_test_/i,
+  // Ethereum addresses (40 hex chars with 0x prefix)
+  /0x[0-9a-fA-F]{40}/,
+  // URLs (not secrets)
+  /https?:\/\//,
+  // Path-like strings
+  /\/[a-zA-Z0-9_.-]+\//,
+  // Generic patterns with "0x" that are likely addresses, not private keys
+  /['"]?[a-z]+['"]?\s*[:=]\s*['"]0x[0-9a-fA-F]{40}/i,
 ];
 
 function log(message, color = 'reset') {

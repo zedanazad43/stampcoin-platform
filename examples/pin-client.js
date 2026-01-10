@@ -361,8 +361,3 @@ const VueExample = {
 
 // Export for use in modules
 export { pinToIPFS, fileToBase64 };
-
-// For CommonJS
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { pinToIPFS, fileToBase64 };
-}
