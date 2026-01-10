@@ -48,18 +48,19 @@ function makeRequest(options, data) {
 /**
  * Pin to nft.storage
  */
-async function pinToNFTStorage(fileData, fileName, apiKey) {
+async function pinToNFTStorage(fileBuffer, fileName, apiKey) {
   const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
-  const fileBuffer = Buffer.from(fileData, 'base64');
   
-  const formData = [
-    `--${boundary}`,
-    `Content-Disposition: form-data; name="file"; filename="${fileName}"`,
-    'Content-Type: application/octet-stream',
-    '',
-    fileBuffer.toString('binary'),
-    `--${boundary}--`
-  ].join('\r\n');
+  // Build multipart form data properly with Buffer
+  const parts = [
+    Buffer.from(`--${boundary}\r\n`),
+    Buffer.from(`Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n`),
+    Buffer.from('Content-Type: application/octet-stream\r\n\r\n'),
+    fileBuffer,
+    Buffer.from(`\r\n--${boundary}--\r\n`)
+  ];
+  
+  const formData = Buffer.concat(parts);
 
   const options = {
     hostname: 'api.nft.storage',
@@ -69,7 +70,7 @@ async function pinToNFTStorage(fileData, fileName, apiKey) {
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': `multipart/form-data; boundary=${boundary}`,
-      'Content-Length': Buffer.byteLength(formData)
+      'Content-Length': formData.length
     }
   };
 
@@ -79,9 +80,8 @@ async function pinToNFTStorage(fileData, fileName, apiKey) {
 /**
  * Pin to Pinata
  */
-async function pinToPinata(fileData, fileName, auth) {
+async function pinToPinata(fileBuffer, fileName, auth) {
   const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
-  const fileBuffer = Buffer.from(fileData, 'base64');
   
   const metadata = JSON.stringify({
     name: fileName,
@@ -90,23 +90,24 @@ async function pinToPinata(fileData, fileName, auth) {
     }
   });
 
-  const formData = [
-    `--${boundary}`,
-    `Content-Disposition: form-data; name="file"; filename="${fileName}"`,
-    'Content-Type: application/octet-stream',
-    '',
-    fileBuffer.toString('binary'),
-    `--${boundary}`,
-    'Content-Disposition: form-data; name="pinataMetadata"',
-    'Content-Type: application/json',
-    '',
-    metadata,
-    `--${boundary}--`
-  ].join('\r\n');
+  // Build multipart form data properly with Buffer
+  const parts = [
+    Buffer.from(`--${boundary}\r\n`),
+    Buffer.from(`Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n`),
+    Buffer.from('Content-Type: application/octet-stream\r\n\r\n'),
+    fileBuffer,
+    Buffer.from(`\r\n--${boundary}\r\n`),
+    Buffer.from('Content-Disposition: form-data; name="pinataMetadata"\r\n'),
+    Buffer.from('Content-Type: application/json\r\n\r\n'),
+    Buffer.from(metadata),
+    Buffer.from(`\r\n--${boundary}--\r\n`)
+  ];
+  
+  const formData = Buffer.concat(parts);
 
   const headers = {
     'Content-Type': `multipart/form-data; boundary=${boundary}`,
-    'Content-Length': Buffer.byteLength(formData)
+    'Content-Length': formData.length
   };
 
   // Support both JWT and API key/secret authentication
@@ -131,7 +132,7 @@ async function pinToPinata(fileData, fileName, auth) {
 /**
  * Validate request body
  */
-function validateRequest(body) {
+function validateRequest(body, fileBuffer) {
   if (!body) {
     throw new Error('Request body is required');
   }
@@ -144,15 +145,9 @@ function validateRequest(body) {
     throw new Error('File name is required');
   }
 
-  // Check file size
-  const fileSize = Buffer.from(body.file, 'base64').length;
-  if (fileSize > MAX_FILE_SIZE) {
+  // Check file size using the already decoded buffer
+  if (fileBuffer.length > MAX_FILE_SIZE) {
     throw new Error(`File size exceeds maximum limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`);
-  }
-
-  // Validate base64
-  if (!/^[A-Za-z0-9+/=]+$/.test(body.file)) {
-    throw new Error('Invalid base64 encoded file data');
   }
 
   return true;
@@ -189,10 +184,18 @@ async function handler(req, res) {
       body = req.body;
     }
 
-    // Validate request
-    validateRequest(body);
+    // Validate base64 format before decoding
+    if (!body.file || !/^[A-Za-z0-9+/=]+$/.test(body.file)) {
+      throw new Error('Invalid base64 encoded file data');
+    }
 
-    const { file, fileName, metadata } = body;
+    // Decode file data once
+    const fileBuffer = Buffer.from(body.file, 'base64');
+
+    // Validate request with the decoded buffer
+    validateRequest(body, fileBuffer);
+
+    const { fileName, metadata } = body;
     const results = {};
 
     // Check for required environment variables
@@ -202,8 +205,7 @@ async function handler(req, res) {
     }
 
     // Pin to nft.storage (required)
-    console.log('Pinning to nft.storage...');
-    const nftStorageResult = await pinToNFTStorage(file, fileName, nftStorageKey);
+    const nftStorageResult = await pinToNFTStorage(fileBuffer, fileName, nftStorageKey);
     results.nftStorage = {
       success: true,
       data: nftStorageResult.body
@@ -216,18 +218,16 @@ async function handler(req, res) {
 
     if (pinataJwt || (pinataApiKey && pinataSecretKey)) {
       try {
-        console.log('Pinning to Pinata...');
         const pinataAuth = pinataJwt 
           ? { jwt: pinataJwt }
           : { apiKey: pinataApiKey, secretApiKey: pinataSecretKey };
         
-        const pinataResult = await pinToPinata(file, fileName, pinataAuth);
+        const pinataResult = await pinToPinata(fileBuffer, fileName, pinataAuth);
         results.pinata = {
           success: true,
           data: pinataResult.body
         };
       } catch (pinataError) {
-        console.error('Pinata error:', pinataError);
         results.pinata = {
           success: false,
           error: pinataError.message
@@ -252,7 +252,6 @@ async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Error:', error);
     res.status(400).json({
       success: false,
       error: error.message
