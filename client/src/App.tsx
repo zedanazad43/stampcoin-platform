@@ -32,6 +32,8 @@ import MyStampsPage from "./pages/my-stamps";
 import TradingMarketplace from "./pages/trading-marketplace";
 import EscrowManagement from "./pages/escrow-management";
 import ShippingTracking from "./pages/shipping-tracking";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import CexPaymentInstructions from "./pages/CexPaymentInstructions";
 
 function Router() {
   return (
@@ -64,6 +66,8 @@ function Router() {
       <Route path="/upload" component={UploadPage} />
       <Route path="/my-stamps" component={MyStampsPage} />
       <Route path="/payment-result" component={PaymentResult} />
+      <Route path="/payment/success" component={PaymentSuccess} />
+      <Route path="/payment/cex" component={CexPaymentInstructions} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <rect width="1200" height="600" fill="#0B1220"/>
+  <circle cx="350" cy="300" r="220" fill="#123" stroke="#3B82F6" stroke-width="3"/>
+  <circle cx="520" cy="300" r="170" fill="#142034" stroke="#22D3EE" stroke-width="3"/>
+  <circle cx="660" cy="300" r="120" fill="#1B2A44" stroke="#A78BFA" stroke-width="3"/>
+  <text x="280" y="300" fill="#93C5FD" font-size="28" font-family="Inter, Arial" font-weight="700">TAM</text>
+  <text x="470" y="300" fill="#67E8F9" font-size="24" font-family="Inter, Arial" font-weight="700">SAM</text>
+  <text x="620" y="300" fill="#DDD6FE" font-size="20" font-family="Inter, Arial" font-weight="700">SOM</text>
+  <text x="60" y="70" fill="#E5E7EB" font-size="26" font-family="Inter, Arial">Collectibles Market → Cultural Web3</text>
+</svg>

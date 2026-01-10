@@ -1,3 +1,65 @@
+# StampCoin Platform — Rare Digital Stamps on Blockchain
+
+حل متكامل لتحويل الطوابع النادرة إلى أصول رقمية موثّقة وقابلة للتداول على Polygon مع سوق NFT، مصادقة خبراء، وأرشيف رقمي دائم.
+
+![CI](https://img.shields.io/github/actions/workflow/status/Stampcoin-platform/Stampcoin-platform/ci.yml?label=CI)
+![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Stampcoin-platform/Stampcoin-platform/main/badges/coverage.json)
+[View Coverage Report](https://stampcoin-platform.github.io/Stampcoin-platform/coverage/)
+
+## بوابة المستثمر
+- Investor Portal (GitHub Pages): https://stampcoin-platform.github.io/Stampcoin-platform/
+- يتضمن: One‑Pager، Deck، Roadmap، FAQ، وتقرير التغطية.
+![Node](https://img.shields.io/badge/node-20.x-brightgreen)
+![Status](https://img.shields.io/badge/status-Ready%20to%20Demo-blue)
+![License](https://img.shields.io/badge/license-Proprietary-orange)
+
+## لمحة سريعة
+- واجهة React 19 (Vite + Tailwind) + tRPC + Express
+- Drizzle ORM مع MySQL، ودعم Redis/Storage/IPFS
+- تكامل Polygon وIPFS، مسارات سكّ NFT وخدمات توثيق الخبراء
+- أدوات نشر آلية وملفات تشغيل على IONOS / Fly.io / Railway
+
+## التشغيل المحلي (مجاناً)
+1) تثبيت المتطلبات: Node 20، pnpm
+2) نسخ القيم من `.env.deploy.example` إلى `.env.local` واستعمال مفاتيح تجريبية (Stripe/CEX/Polygon testnet)
+3) أوامر:
+
+```bash
+pnpm install
+pnpm dev            # Frontend + Backend (التطوير)
+```
+
+ملاحظة: وضع العرض التجريبي مفعّل عبر `DEMO_MODE=true` لتعطيل أي استدعاءات مدفوعة واستعمال مفاتيح/شبكات اختبار.
+
+## البنية
+- الواجهة: `client/src`
+- الخادم: `server`
+- المشترك: `shared`
+- قاعدة البيانات: `drizzle/schema.ts` (المصدر الأساسي)
+
+## لماذا الآن؟
+- محتوى ثقافي عميق (Philately) + Web3 يفتح سيولة عالمية جديدة
+- ملكية رقمية قابلة للتحقق + أرشفة دائمة على IPFS
+- تجربة استخدام مبسطة (tRPC + React) وعمليات آمنة (JWT/Role/Router)
+
+## للمستثمرين
+- One‑Pager: انظر [INVESTOR_ONE_PAGER.md](INVESTOR_ONE_PAGER.md)
+- Deck مختصر: انظر [PITCH_DECK.md](PITCH_DECK.md)
+- الأسئلة الشائعة: انظر [INVESTOR_FAQ.md](INVESTOR_FAQ.md)
+- خارطة الطريق: انظر [ROADMAP.md](ROADMAP.md)
+- غرفة البيانات: انظر [DATA_ROOM_CHECKLIST.md](DATA_ROOM_CHECKLIST.md)
+- المقاييس والتحليلات: انظر [METRICS_AND_ANALYTICS.md](METRICS_AND_ANALYTICS.md)
+
+## العرض التجريبي
+اتبع [DEMO_PLAYBOOK.md](DEMO_PLAYBOOK.md) لتشغيل سيناريو Demo سريع (بدون مزودات مدفوعة) وإظهار سكّ وشراء NFT تجريبي.
+
+## الجودة والبنى التحتية
+- CI مجّاني عبر GitHub Actions: typecheck + tests (اختياري)
+- سكربتات نشر: IONOS / Fly.io / Railway
+
+## تواصل
+- بريد: stampcoin.contact@gmail.com
+- موقع: https://stampcoin-platform.fly.dev
 # StampCoin Platform 🪙
 
 **© 2024-2026 Stampcoin Platform - Proprietary and Confidential**

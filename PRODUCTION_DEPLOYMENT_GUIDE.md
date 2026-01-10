@@ -363,27 +363,10 @@ NODE_ENV=production
 إنشاء `vercel.json`:
 ```json
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "client/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "server/_core/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "server/_core/index.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "client/$1"
-    }
-  ]
+  "buildCommand": "pnpm install && pnpm build",
+  "installCommand": "pnpm install",
+  "outputDirectory": "dist",
+  "framework": null
 }
 ```
 

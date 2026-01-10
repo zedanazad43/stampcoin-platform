@@ -76,37 +76,10 @@ echo "Creating vercel.json..."
 
 cat > vercel.json << 'EOF'
 {
-  "version": 2,
-  "buildCommand": "npm run build && npm run build:frontend",
-  "installCommand": "npm install",
-  "outputDirectory": "dist/client",
-  "builds": [
-    {
-      "src": "dist/client/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "server/_core/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["server/**", "drizzle/**", "dist/**"]
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "server/_core/index.ts"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
+  "buildCommand": "pnpm install && pnpm build",
+  "installCommand": "pnpm install",
+  "outputDirectory": "dist",
+  "framework": null,
   "env": {
     "NODE_ENV": "production"
   }

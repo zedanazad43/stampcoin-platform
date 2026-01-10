@@ -42,6 +42,22 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   
+  // Early redirect middleware for marketplace paths
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    if (req.path === '/knownorigin' || req.path === '/market/knownorigin') {
+      const url = process.env.KO_PROFILE_URL || 'https://knownorigin.io/';
+      console.log('[Redirect] KnownOrigin (early middleware) ->', url);
+      return res.redirect(302, url);
+    }
+    if (req.path === '/superrare' || req.path === '/market/superrare') {
+      const url = process.env.SR_PROFILE_URL || 'https://superrare.com/';
+      console.log('[Redirect] SuperRare (early middleware) ->', url);
+      return res.redirect(302, url);
+    }
+    next();
+  });
+  
   // Stripe webhook MUST be registered BEFORE express.json() to preserve raw body
   app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
   
@@ -51,6 +67,19 @@ async function startServer() {
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
+  // Marketplace redirects (KnownOrigin / SuperRare)
+  // Configure KO_PROFILE_URL / SR_PROFILE_URL in environment
+  app.get(['/market/knownorigin', '/knownorigin'], (req, res) => {
+    console.log('[Redirect] KnownOrigin route hit');
+    const url = process.env.KO_PROFILE_URL || 'https://knownorigin.io/';
+    res.redirect(302, url);
+  });
+  app.get(['/market/superrare', '/superrare'], (req, res) => {
+    console.log('[Redirect] SuperRare route hit');
+    const url = process.env.SR_PROFILE_URL || 'https://superrare.com/';
+    res.redirect(302, url);
   });
   
   // OAuth callback under /api/oauth/callback

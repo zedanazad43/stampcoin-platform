@@ -8,6 +8,7 @@ import { storagePut } from "./storage";
 import { randomBytes } from "crypto";
 import Stripe from 'stripe';
 import { STAMP_PRODUCTS } from './products';
+import * as paypal from './paypal';
 import * as nftMinting from './nft-minting';
 import * as authentication from './authentication';
 import * as appraisal from './appraisal';
@@ -18,6 +19,9 @@ import { downloadsRouter } from "./routers/downloads";
 import { stampAuthenticationRouter } from "./routers/stamp-authentication";
 import { tradingRouter } from "./routers/stamp-trading";
 import { shippingRouter } from "./routers/stamp-shipping";
+import { stripeAccountSessionRouter } from "./routers/stripe-account-session";
+import { directPaymentRouter } from "./routers/direct-payment";
+import { cexPaymentRouter } from "./routers/cex-payment";
 
 function createTestStripeMock() {
   return {
@@ -53,6 +57,9 @@ export const appRouter = router({
   stampAuthentication: stampAuthenticationRouter,
   trading: tradingRouter,
   shipping: shippingRouter,
+  stripeAccountSession: stripeAccountSessionRouter,
+  directPayment: directPaymentRouter,
+  cexPayment: cexPaymentRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -245,7 +252,7 @@ export const appRouter = router({
       .input(z.object({
         stampId: z.number(),
         productId: z.string(),
-        paymentMethod: z.enum(['card', 'paypal', 'apple_pay', 'google_pay']).default('card'),
+        paymentMethod: z.enum(['card', 'paypal', 'cex_io', 'apple_pay', 'google_pay']).default('card'),
       }))
       .mutation(async ({ input, ctx }) => {
         try {
@@ -256,15 +263,32 @@ export const appRouter = router({
           }
 
           const origin = ctx.req.headers.origin || 'http://localhost:3000';
-          
-          const paymentMethodMap: Record<string, string[]> = {
-            card: ['card'],
-            paypal: ['paypal'],
-            apple_pay: ['apple_pay'],
-            google_pay: ['google_pay'],
-          };
-          
-          const paymentMethods = paymentMethodMap[input.paymentMethod] || ['card'];
+
+          if (input.paymentMethod === 'paypal') {
+            if (!paypal.isPayPalEnabled()) {
+              throw new Error('PayPal is disabled');
+            }
+
+            const paypalOrder = await paypal.createOrder({
+              amount: product.price,
+              currency: 'USD',
+              description: product.description,
+              returnUrl: `${origin}/payment-result?payment=success&provider=paypal`,
+              cancelUrl: `${origin}/payment-result?payment=cancelled&provider=paypal`,
+              userId: ctx.user.id,
+              stampId: input.stampId,
+              productId: input.productId,
+            });
+
+            return {
+              url: paypalOrder.approvalUrl,
+              sessionId: paypalOrder.orderId,
+              orderId: paypalOrder.orderId,
+              paymentMethod: 'paypal',
+            };
+          }
+
+          const paymentMethods: string[] = ['card'];
 
           const session = await stripe.checkout.sessions.create({
             payment_method_types: paymentMethods as any,
@@ -327,34 +351,86 @@ export const appRouter = router({
           throw new Error('Invalid session ID');
         }
       }),
+
+    capturePaypalOrder: protectedProcedure
+      .input(z.object({ orderId: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const result = await paypal.captureOrder(input.orderId);
+
+          const [userIdStr, stampIdStr] = (result.customId || '').split(':');
+          const stampId = parseInt(stampIdStr || '', 10);
+          const price = result.amount || '0.00';
+
+          if (result.status === 'COMPLETED' && Number.isInteger(stampId)) {
+            await db.createTransaction({
+              stampId,
+              buyerId: ctx.user.id,
+              price,
+              status: 'completed',
+              transactionHash: result.orderId,
+            });
+          }
+
+          return {
+            status: result.status,
+            orderId: result.orderId,
+            amount: result.amount,
+            currency: result.currency,
+            payerEmail: result.payerEmail,
+          };
+        } catch (error: any) {
+          console.error('[Payments] PayPal capture failed:', error);
+          throw new Error(`Failed to capture PayPal order: ${error.message}`);
+        }
+      }),
     
     getPaymentMethods: publicProcedure.query(async () => {
+      const cexEnabled = process.env.CEX_IO_ENABLED === 'true' && !!process.env.CEX_IO_USER_ID;
+      
       return [
         {
           id: 'card',
           name: 'Credit/Debit Card',
+          nameAr: 'بطاقة ائتمان/خصم',
           description: 'Visa, Mastercard, American Express, Discover',
+          descriptionAr: 'فيزا، ماستركارد، أمريكان إكسبريس، ديسكفر',
           icon: 'CreditCard',
           supported: true,
         },
         {
           id: 'paypal',
           name: 'PayPal',
+          nameAr: 'باي بال',
           description: 'Fast and secure payments with PayPal',
+          descriptionAr: 'مدفوعات سريعة وآمنة مع باي بال',
           icon: 'PayPal',
-          supported: true,
+          supported: paypal.isPayPalEnabled(),
+        },
+        {
+          id: 'cex_io',
+          name: 'CEX.io Transfer',
+          nameAr: 'تحويل CEX.io',
+          description: `Direct transfer to CEX.io User ID ${process.env.CEX_IO_USER_ID || ''}`,
+          descriptionAr: `تحويل مباشر إلى حساب CEX.io رقم ${process.env.CEX_IO_USER_ID || ''}`,
+          icon: 'Wallet',
+          supported: cexEnabled,
         },
         {
           id: 'apple_pay',
           name: 'Apple Pay',
+          nameAr: 'أبل باي',
           description: 'Quick and secure payments with Apple Pay',
+          descriptionAr: 'مدفوعات سريعة وآمنة مع أبل باي',
           icon: 'Apple',
           supported: true,
         },
         {
           id: 'google_pay',
           name: 'Google Pay',
+          nameAr: 'جوجل باي',
           description: 'Fast checkout with Google Pay',
+          descriptionAr: 'دفع سريع مع جوجل باي',
           icon: 'Google',
           supported: true,
         },

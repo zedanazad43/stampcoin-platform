@@ -5,16 +5,38 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
 import { Link } from 'wouter';
+import { trpc } from '@/lib/trpc';
+import { toast } from 'sonner';
 
 export default function PaymentResult() {
   const [location] = useLocation();
   const [sessionId, setSessionId] = useState<string>('');
   const [paymentStatus, setPaymentStatus] = useState<string>('');
+  const [provider, setProvider] = useState<string>('');
+  const [paypalOrderId, setPaypalOrderId] = useState<string>('');
+  const [paypalState, setPaypalState] = useState<'idle' | 'capturing' | 'success' | 'failed'>('idle');
+
+  const capturePaypal = trpc.payments.capturePaypalOrder.useMutation({
+    onSuccess: (res) => {
+      setPaypalState('success');
+      toast.success('PayPal payment captured', {
+        description: `Order ${res.orderId} captured successfully`,
+      });
+    },
+    onError: (err) => {
+      setPaypalState('failed');
+      toast.error('Failed to capture PayPal payment', {
+        description: err.message,
+      });
+    },
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionIdParam = params.get('sessionId');
     const statusParam = params.get('payment');
+    const providerParam = params.get('provider');
+    const paypalToken = params.get('token'); // PayPal returns orderId as `token`
 
     if (sessionIdParam) {
       setSessionId(sessionIdParam);
@@ -22,7 +44,21 @@ export default function PaymentResult() {
     if (statusParam) {
       setPaymentStatus(statusParam);
     }
+    if (providerParam) {
+      setProvider(providerParam);
+    }
+    if (paypalToken) {
+      setPaypalOrderId(paypalToken);
+    }
   }, []);
+
+  useEffect(() => {
+    // If coming back from PayPal approval, capture the order
+    if (provider === 'paypal' && paypalOrderId && paypalState === 'idle') {
+      setPaypalState('capturing');
+      capturePaypal.mutate({ orderId: paypalOrderId });
+    }
+  }, [provider, paypalOrderId, paypalState, capturePaypal]);
 
   return (
     <div className="min-h-screen bg-stamps-luxury">
@@ -43,16 +79,37 @@ export default function PaymentResult() {
             Payment Status
           </h1>
 
-          {/* Payment Status Component */}
-          <PaymentStatus
-            sessionId={sessionId}
-            onSuccess={() => {
-              console.log('Payment successful');
-            }}
-            onError={(error) => {
-              console.error('Payment error:', error);
-            }}
-          />
+          {/* Payment Status Component (Stripe) or PayPal capture summary */}
+          {provider === 'paypal' ? (
+            <Card className={`border-2 ${paypalState === 'success' ? 'bg-green-50 border-green-200' : paypalState === 'failed' ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+              <CardHeader>
+                <CardTitle>
+                  {paypalState === 'capturing' && 'Capturing PayPal Payment...'}
+                  {paypalState === 'success' && 'PayPal Payment Successful'}
+                  {paypalState === 'failed' && 'PayPal Payment Failed'}
+                  {paypalState === 'idle' && 'Processing PayPal Payment'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {paypalState === 'capturing' && 'Please wait while we confirm your payment.'}
+                  {paypalState === 'success' && 'Your PayPal payment has been captured successfully.'}
+                  {paypalState === 'failed' && 'We could not capture your PayPal payment. Please try again.'}
+                  {paypalState === 'idle' && 'Preparing to capture payment...'}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <PaymentStatus
+              sessionId={sessionId}
+              onSuccess={() => {
+                console.log('Payment successful');
+              }}
+              onError={(error) => {
+                console.error('Payment error:', error);
+              }}
+            />
+          )}
 
           {/* Additional Information */}
           <Card className="card-premium mt-8">

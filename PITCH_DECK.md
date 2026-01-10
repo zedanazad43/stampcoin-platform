@@ -1,5 +1,7 @@
 # StampCoin Pitch Deck
 
+![Cover](assets/investor/header.svg)
+
 **The Future of Stamp Collecting**
 
 ---
@@ -12,8 +14,8 @@
 🎨 NFT Marketplace | 📮 Digital Stamps | 🌐 Global Community
 
 **Contact:**  
-azadzedan13@gmail.com  
-[Website URL]
+stampcoin.contact@gmail.com  
+https://stampcoin-platform.fly.dev
 
 ---
 
@@ -119,34 +121,27 @@ Transform traditional stamp collecting into a modern, digital experience using b
 ### Built on Modern, Scalable Technology
 
 **Frontend:**
-- React + TypeScript
-- Tailwind CSS
-- Responsive design
-- PWA-ready
+- React 19 + TypeScript (Vite)
+- TailwindCSS 4 + shadcn/ui
+- wouter routing
 
 **Backend:**
-- Node.js + Express
-- tRPC for type-safe APIs
-- Prisma ORM
-- PostgreSQL database
+- Node.js (Express) + tRPC 11
+- Drizzle ORM + MySQL
+- Redis (اختياري)
 
-**Blockchain:**
-- NFT smart contracts
-- Ethereum/Polygon compatible
-- IPFS for metadata storage
-- Web3 wallet integration
+**Blockchain & Storage:**
+- Polygon (ERC‑721)
+- IPFS (Pinata)
+- Optional AWS S3
 
-**Payment:**
-- Stripe integration
-- Multiple payment methods
-- Webhook automation
-- PCI DSS compliant
+**Payments & Auth:**
+- Stripe / PayPal / CEX.io (Sandboxes)
+- OAuth (Google/Discord)
 
-**Infrastructure:**
-- Vercel hosting
-- AWS S3 storage
-- CDN for global delivery
-- 99.9% uptime SLA
+**Deployment:**
+- IONOS VPS / Fly.io / Railway (اختياري)
+- Nginx + Certbot
 
 ---
 
@@ -397,6 +392,28 @@ Transform traditional stamp collecting into a modern, digital experience using b
 ## Slide 15: Investment Opportunity
 
 ### Join Us in Revolutionizing a $12B Industry
+
+![Market Map](assets/investor/market-map.svg)
+
+---
+
+## Appendix A: Case Study — Penny Black (1840)
+
+![Penny Black](assets/investor/penny-black.svg)
+
+- First adhesive postage stamp (UK). Historic origin point of philately.
+- Narrative fit for education/PR; strong cultural resonance.
+- On StampCoin: expert certificate, high‑res metadata, on‑chain provenance.
+
+---
+
+## Appendix B: Case Study — Inverted Jenny (1918)
+
+![Inverted Jenny](assets/investor/inverted-jenny.svg)
+
+- Legendary printing error (USA). ~100 known.
+- Iconic “error” storytelling → collector/investor appeal.
+- On StampCoin: authenticity workflow + rarity‑driven showcase.
 
 **The Ask:**
 - **Amount:** $3.5M Seed Round

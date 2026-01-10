@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StampCoin — Investor Portal</title>
+  <meta name="description" content="Investor resources: one-pager, deck, roadmap, FAQ, coverage report." />
+  <style>
+    :root { --bg: #0b1220; --card: #111827; --text: #e5e7eb; --muted: #9ca3af; --link: #60a5fa; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+    .hero { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: center; }
+    .card { background: var(--card); border: 1px solid #1f2937; border-radius: 14px; padding: 20px; }
+    h1 { font-size: 32px; margin: 0 0 10px; }
+    p { color: var(--muted); line-height: 1.6; }
+    a { color: var(--link); text-decoration: none; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
+    .thumb { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; border: 1px solid #1f2937; background: #0f172a; }
+    .footer { margin-top: 40px; font-size: 14px; color: var(--muted); }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-top: 12px; }
+    .kpi { background:#0f172a; border:1px solid #1f2937; border-radius:10px; padding:12px; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero card">
+      <img src="../../assets/investor/header.svg" alt="StampCoin header" class="thumb" style="height:220px" />
+      <div>
+        <h1>StampCoin — Investor Portal</h1>
+        <p>Everything you need to evaluate StampCoin: one‑pager, deck, roadmap, FAQ, and latest test coverage. All resources are open and free to access.</p>
+        <div class="kpis">
+          <div class="kpi"><div>Tech</div><strong>tRPC + Drizzle + Polygon</strong></div>
+          <div class="kpi"><div>CI</div><strong>Typecheck + Tests + Coverage</strong></div>
+          <div class="kpi"><div>Status</div><strong>Ready to Demo</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <img src="../../assets/investor/market-map.svg" class="thumb" alt="Market map" />
+        <h3>One‑Pager</h3>
+        <p>Concise overview of problem, solution, product and GTM.</p>
+        <a href="https://github.com/Stampcoin-platform/Stampcoin-platform/blob/main/INVESTOR_ONE_PAGER.md" target="_blank">Open One‑Pager →</a>
+      </div>
+      <div class="card">
+        <img src="../../assets/investor/penny-black.svg" class="thumb" alt="Penny Black" />
+        <h3>Pitch Deck</h3>
+        <p>Compact deck with visuals and case studies.</p>
+        <a href="https://github.com/Stampcoin-platform/Stampcoin-platform/blob/main/PITCH_DECK.md" target="_blank">Open Deck →</a>
+      </div>
+      <div class="card">
+        <img src="../../assets/investor/inverted-jenny.svg" class="thumb" alt="Inverted Jenny" />
+        <h3>Roadmap</h3>
+        <p>Public roadmap and upcoming milestones for 2026.</p>
+        <a href="https://github.com/Stampcoin-platform/Stampcoin-platform/blob/main/ROADMAP.md" target="_blank">Open Roadmap →</a>
+      </div>
+      <div class="card">
+        <img src="../../assets/investor/header.svg" class="thumb" alt="FAQ" />
+        <h3>Investor FAQ</h3>
+        <p>Direct answers to common investor questions.</p>
+        <a href="https://github.com/Stampcoin-platform/Stampcoin-platform/blob/main/INVESTOR_FAQ.md" target="_blank">Open FAQ →</a>
+      </div>
+      <div class="card">
+        <img src="../../assets/investor/header.svg" class="thumb" alt="Coverage" />
+        <h3>Test Coverage</h3>
+        <p>Latest automated test coverage with details.</p>
+        <a href="/coverage/" target="_blank">Open Coverage Report →</a>
+      </div>
+      <div class="card">
+        <img src="../../assets/investor/header.svg" class="thumb" alt="Data Room" />
+        <h3>Data Room (Light)</h3>
+        <p>Links to technical, deployment, and strategy docs.</p>
+        <a href="https://github.com/Stampcoin-platform/Stampcoin-platform/blob/main/DATA_ROOM_CHECKLIST.md" target="_blank">Open Data Room →</a>
+      </div>
+    </div>
+
+    <p class="footer">Contact: stampcoin.contact@gmail.com • Website: https://stampcoin-platform.fly.dev</p>
+  </div>
+</body>
+</html>

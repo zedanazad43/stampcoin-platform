@@ -1,0 +1,261 @@
+# IONOS VPS Configuration for StampCoin Platform
+# Generated: January 10, 2026
+
+project:
+  name: "StampCoin NFT Marketplace"
+  version: "1.0.0"
+  environment: "production"
+
+domains:
+  primary:
+    name: "stampcoin.com"
+    registrar: "IONOS.de"
+    price: "1€ first year, then 15€/year"
+    ssl: "Wildcard SSL Certificate"
+    dns:
+      - type: "A"
+        name: "@"
+        value: "${VPS_IP}"
+        ttl: 3600
+      - type: "A"
+        name: "www"
+        value: "${VPS_IP}"
+        ttl: 3600
+      - type: "A"
+        name: "api"
+        value: "${VPS_IP}"
+        ttl: 3600
+      - type: "CNAME"
+        name: "cdn"
+        value: "cdn.ionos.com"
+        ttl: 3600
+      - type: "MX"
+        name: "@"
+        value: "mx00.ionos.de"
+        priority: 10
+        ttl: 3600
+      - type: "TXT"
+        name: "@"
+        value: "v=spf1 include:_spf.ionos.de ~all"
+        ttl: 3600
+
+  secondary:
+    - name: "stampcoin.io"
+      price: "39€/year"
+      purpose: "Blockchain/Tech branding"
+      redirect_to: "stampcoin.com"
+    - name: "stampcoin.net"
+      price: "1€ first year"
+      purpose: "Backup domain"
+      redirect_to: "stampcoin.com"
+    - name: "stampcoin.de"
+      price: "1€ first year"
+      purpose: "German market"
+      redirect_to: "stampcoin.com/de"
+    - name: "stampcoin.ae"
+      price: "29€/year"
+      purpose: "UAE/Arab market"
+      redirect_to: "stampcoin.com/ar"
+
+vps:
+  package: "VPS Linux XL"
+  pricing:
+    promotional: "20€/month (first 6 months)"
+    regular: "40€/month"
+  
+  specifications:
+    cpu: "8 vCores"
+    ram: "16 GB"
+    storage: "320 GB NVMe SSD"
+    bandwidth: "Unlimited"
+    network: "1 Gbps"
+    os: "Ubuntu 24.04 LTS"
+    
+  features:
+    - "Root access"
+    - "99.9% uptime SLA"
+    - "DDoS protection"
+    - "Automated snapshots"
+    - "24/7 monitoring"
+    - "Rapid deployment (55 seconds)"
+    
+  datacenter:
+    location: "Frankfurt, Germany"
+    compliance: "GDPR compliant"
+    backup_location: "Karlsruhe, Germany"
+
+email:
+  package: "Email Business Pro"
+  accounts:
+    - email: "info@stampcoin.com"
+      storage: "50 GB"
+      purpose: "General inquiries"
+    - email: "support@stampcoin.com"
+      storage: "50 GB"
+      purpose: "Customer support"
+    - email: "payments@stampcoin.com"
+      storage: "50 GB"
+      purpose: "Payment notifications"
+    - email: "noreply@stampcoin.com"
+      storage: "10 GB"
+      purpose: "Automated emails"
+    - email: "admin@stampcoin.com"
+      storage: "50 GB"
+      purpose: "Administration"
+  
+  pricing: "3€/month per mailbox"
+  features:
+    - "Active Sync"
+    - "Spam/Virus protection"
+    - "Auto-archiving"
+    - "Mobile app support"
+    - "IMAP/POP3/SMTP"
+
+security:
+  ssl:
+    type: "Wildcard SSL Certificate"
+    coverage: "*.stampcoin.com"
+    price: "8.33€/month (99€/year)"
+    features:
+      - "256-bit encryption"
+      - "Unlimited subdomains"
+      - "Mobile browser support"
+      - "99.9% browser recognition"
+  
+  sitelock:
+    package: "SiteLock Security"
+    price: "14.99€/month"
+    features:
+      - "Daily malware scanning"
+      - "Vulnerability detection"
+      - "Automatic malware removal"
+      - "Trust seal"
+      - "Firewall protection"
+  
+  backup:
+    package: "CodeGuard Premium Backup"
+    price: "7.99€/month"
+    features:
+      - "Daily automatic backups"
+      - "Unlimited storage"
+      - "One-click restore"
+      - "File monitoring"
+      - "Database backup"
+
+cdn:
+  package: "IONOS CDN Pro"
+  price: "10€/month"
+  features:
+    - "50+ global edge locations"
+    - "Image optimization"
+    - "Smart caching"
+    - "DDoS protection"
+    - "SSL/TLS support"
+  locations:
+    - "Europe: Frankfurt, London, Paris, Amsterdam"
+    - "North America: New York, Los Angeles, Toronto"
+    - "Asia: Tokyo, Singapore, Mumbai"
+    - "Middle East: Dubai"
+
+packages:
+  startup:
+    monthly_cost: "22€"
+    annual_cost: "264€"
+    includes:
+      - "stampcoin.com domain"
+      - "VPS Linux M (4GB RAM)"
+      - "SSL Certificate (free)"
+      - "2 Email accounts"
+      - "Basic backups"
+    suitable_for: "MVP launch, testing phase"
+  
+  professional:
+    monthly_cost: "76€"
+    annual_cost: "912€"
+    setup_cost: "40€"
+    includes:
+      - "stampcoin.com + stampcoin.io domains"
+      - "VPS Linux XL (16GB RAM)"
+      - "SSL Wildcard"
+      - "5 Email Pro accounts"
+      - "Premium backups"
+      - "CDN Pro"
+      - "SiteLock Security"
+    suitable_for: "Production launch (RECOMMENDED)"
+  
+  enterprise:
+    monthly_cost: "115€"
+    annual_cost: "1,380€"
+    includes:
+      - "Multiple domains (5+)"
+      - "VPS Linux XXL (32GB RAM) or Dedicated Server"
+      - "Complete security suite"
+      - "Unlimited email"
+      - "Premium CDN"
+      - "24/7 priority support"
+    suitable_for: "High-traffic scaling, global expansion"
+
+deployment_timeline:
+  phase_1:
+    name: "Immediate Setup"
+    duration: "Day 1"
+    tasks:
+      - "Purchase stampcoin.com"
+      - "Activate VPS Linux XL"
+      - "Configure 2 email accounts"
+      - "Install SSL certificate"
+    cost: "27€/month"
+  
+  phase_2:
+    name: "Security Setup"
+    duration: "Week 1"
+    tasks:
+      - "Activate SSL Wildcard"
+      - "Enable SiteLock Security"
+      - "Configure automated backups"
+      - "Setup monitoring"
+    additional_cost: "31€/month"
+  
+  phase_3:
+    name: "Optimization"
+    duration: "Month 1"
+    tasks:
+      - "Activate CDN Pro"
+      - "Add secondary domains"
+      - "Expand email accounts"
+      - "Performance tuning"
+    additional_cost: "25€/month"
+
+monitoring:
+  uptime:
+    - "IONOS 24/7 monitoring"
+    - "StatusPage integration"
+    - "Email alerts"
+    - "SMS notifications (optional)"
+  
+  performance:
+    - "Server resource monitoring"
+    - "Application performance"
+    - "CDN analytics"
+    - "Security scan reports"
+
+support:
+  levels:
+    standard:
+      included: true
+      channels: ["Email", "Phone", "Live Chat"]
+      hours: "24/7"
+      languages: ["German", "English", "Arabic"]
+    
+    priority:
+      price: "Included with Enterprise"
+      response_time: "< 1 hour"
+      dedicated_manager: true
+
+notes:
+  - "All prices in EUR (€)"
+  - "Promotional pricing valid for January 2026"
+  - "VAT not included (add 19% for EU customers)"
+  - "Payment methods: Credit Card, PayPal, SEPA Direct Debit"
+  - "30-day money-back guarantee on hosting"
+  - "Domain transfers: 0€ with IONOS hosting purchase"

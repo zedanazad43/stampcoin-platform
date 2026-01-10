@@ -18,6 +18,12 @@ export const users = mysqlTable("users", {
   expertRating: decimal("expertRating", { precision: 3, scale: 2 }), // 0.00-5.00
   totalAuthentications: int("totalAuthentications").default(0),
   totalAppraisals: int("totalAppraisals").default(0),
+
+  // Stripe Payment Integration
+  stripeConnectedAccountId: varchar("stripeConnectedAccountId", { length: 100 }), // acct_xxxxx for connected accounts
+  stripeCustomerId: varchar("stripeCustomerId", { length: 100 }), // cus_xxxxx for payment customers
+  paymentMethodsEnabled: boolean("paymentMethodsEnabled").default(false),
+  paymentStatus: mysqlEnum("paymentStatus", ["not_configured", "pending_onboarding", "active", "suspended", "inactive"]).default("not_configured").notNull(),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

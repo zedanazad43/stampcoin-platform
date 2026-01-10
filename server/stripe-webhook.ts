@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { getDb } from './db';
-import { transactions, stamps } from '../drizzle/schema';
+import { transactions, stamps, users } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
 
 function createStripeClient() {
@@ -247,6 +247,67 @@ async function handleChargeDisputeCreated(dispute: Stripe.Dispute) {
   }
 }
 
+async function handleAccountUpdated(account: Stripe.Account) {
+  try {
+    console.log('[Webhook] Processing account update:', {
+      accountId: account.id,
+      chargesEnabled: account.charges_enabled,
+      payoutsEnabled: account.payouts_enabled,
+      requirements: account.requirements?.currently_due,
+      userId: account.metadata?.userId,
+    });
+
+    const db = await getDb();
+    if (!db) {
+      throw new Error('Database connection failed');
+    }
+
+    const userId = account.metadata?.userId;
+    if (!userId) {
+      console.warn('[Webhook] No userId in account metadata');
+      return {
+        success: true,
+        message: 'Account update received but no userId found in metadata',
+      };
+    }
+
+    // Determine payment status based on Stripe account state
+    let paymentStatus: 'not_configured' | 'pending_onboarding' | 'active' | 'suspended' | 'inactive' = 'not_configured';
+    
+    if (account.charges_enabled && account.payouts_enabled) {
+      paymentStatus = 'active';
+    } else if (account.requirements?.currently_due && account.requirements.currently_due.length > 0) {
+      paymentStatus = 'pending_onboarding';
+    } else if (account.charges_enabled === false || account.payouts_enabled === false) {
+      paymentStatus = 'suspended';
+    }
+
+    // Update user's payment status
+    await db.update(users)
+      .set({
+        paymentStatus,
+        paymentMethodsEnabled: account.charges_enabled ?? false,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, parseInt(userId)));
+
+    console.log('[Webhook] User payment status updated:', {
+      userId,
+      paymentStatus,
+      chargesEnabled: account.charges_enabled,
+    });
+
+    return {
+      success: true,
+      message: 'Account status updated successfully',
+      paymentStatus,
+    };
+  } catch (error: any) {
+    console.error('[Webhook] Error processing account update:', error);
+    throw error;
+  }
+}
+
 export async function handleStripeWebhook(req: Request, res: Response) {
   const sig = req.headers['stripe-signature'] as string;
 
@@ -323,6 +384,12 @@ export async function handleStripeWebhook(req: Request, res: Response) {
       case 'charge.dispute.created': {
         const dispute = event.data.object as Stripe.Dispute;
         result = await handleChargeDisputeCreated(dispute);
+        break;
+      }
+
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account;
+        result = await handleAccountUpdated(account);
         break;
       }
 

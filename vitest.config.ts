@@ -20,5 +20,20 @@ export default defineConfig({
       "client/**/*.test.ts",
       "client/**/*.spec.ts",
     ],
+    // Skip tests requiring DB if DATABASE_URL not set
+    exclude: process.env.DATABASE_URL ? [] : [
+      "server/archive.test.ts",
+      "server/auth.logout.test.ts",
+      "server/payments.test.ts",
+      "server/stamps.test.ts",
+      "server/stripe-webhook.test.ts",
+    ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "lcov", "html"],
+      reportsDirectory: "./coverage",
+      exclude: ["**/node_modules/**", "**/dist/**", "**/build/**", "**/*.test.ts", "**/*.spec.ts"],
+      all: true,
+    },
   },
 });
