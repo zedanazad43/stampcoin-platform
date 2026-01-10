@@ -50,14 +50,32 @@ module.exports = async (req, res) => {
       });
     }
 
-    const base64 = imageBase64.split(',')[1];
+    // Extract and validate base64 data
+    const parts = imageBase64.split(',');
+    if (parts.length !== 2 || !parts[1]) {
+      return res.status(400).json({ error: 'Invalid data URL format. Expected format: data:image/type;base64,<data>' });
+    }
+    
+    const base64 = parts[1];
     const buffer = Buffer.from(base64, 'base64');
 
     if (buffer.length > MAX_BYTES) {
       return res.status(413).json({ error: `File too large. Max ${MAX_BYTES} bytes (${MAX_BYTES / 1024 / 1024}MB).` });
     }
+    
     const ext = mimeType.split('/')[1] || 'bin';
-    const filename = name ? `${name}.${ext}` : `upload.${ext}`;
+    
+    // Sanitize filename to prevent path traversal attacks
+    const sanitizeName = (str) => {
+      if (!str) return '';
+      // Remove path separators, special chars, limit length
+      return str
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .substring(0, 50);
+    };
+    
+    const safeName = sanitizeName(name);
+    const filename = safeName ? `${safeName}.${ext}` : `upload.${ext}`;
 
     // Check Pinata credentials
     const pinataJwt = process.env.PINATA_JWT || '';
