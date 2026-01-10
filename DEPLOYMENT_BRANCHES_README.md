@@ -15,9 +15,20 @@ Four branches have been created from the base commit `548c5f1` with the followin
 
 ## How to Push and Create PRs
 
-### Option 1: Automated Script (Recommended)
+### Option 1: GitHub Actions Workflow (Recommended)
 
-Run the provided script:
+The easiest way is to use the GitHub Actions workflow:
+
+1. Go to the Actions tab in the repository
+2. Select "Push Deployment Branches" workflow
+3. Click "Run workflow"
+4. The workflow will automatically push all four branches and create the PRs
+
+**Workflow file**: `.github/workflows/push-deployment-branches.yml`
+
+### Option 2: Automated Script
+
+Run the provided script locally (requires GitHub credentials):
 ```bash
 ./push-deployment-branches.sh
 ```
@@ -27,7 +38,7 @@ This script will:
 2. Create PRs using GitHub CLI if available
 3. Provide manual links if GH CLI is not available
 
-### Option 2: Manual Push and PR Creation
+### Option 3: Manual Push and PR Creation
 
 #### Step 1: Push all branches
 ```bash
