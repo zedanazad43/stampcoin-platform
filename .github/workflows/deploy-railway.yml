@@ -27,24 +27,25 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Install Railway CLI
-        run: |
-          curl -sSL https://railway.app/install.sh | sh
-          sudo mv ~/.railway/bin/railway /usr/local/bin/railway || true
-
-      - name: Deploy to Railway (CI)
+      - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
             echo "RAILWAY_TOKEN secret is missing. Skipping Railway deploy."
+            echo "Alternatively, enable Railway GitHub integration in your Railway dashboard for automatic deploys."
             exit 1
           fi
-          railway login --apiKey "$RAILWAY_TOKEN" || true
-          if [ -n "$RAILWAY_PROJECT_ID" ]; then
-            railway up --ci --project "$RAILWAY_PROJECT_ID" || echo "railway up failed; consider configuring GitHub integration in Railway dashboard."
+          
+          # Install Railway CLI from npm (safer than curl | sh)
+          npm install -g @railway/cli
+          
+          # Deploy using Railway CLI
+          if [ -n "$RAILWAY_SERVICE_ID" ]; then
+            railway up --service "$RAILWAY_SERVICE_ID" || echo "railway up failed; consider enabling GitHub integration in Railway dashboard."
           else
-            echo "RAILWAY_PROJECT_ID not set; ensure Railway GitHub integration is enabled or set RAILWAY_PROJECT_ID."
-            exit 0
+            echo "RAILWAY_SERVICE_ID not set. Please add it to GitHub Secrets or enable Railway GitHub integration."
+            echo "To get your service ID: railway status"
+            exit 1
           fi

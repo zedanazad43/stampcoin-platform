@@ -45,7 +45,11 @@ module.exports = async (req, res) => {
     const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
     const ext = mimeType.split('/')[1] || 'bin';
-    const filename = `upload.${ext}`;
+    
+    // Validate extension to prevent path traversal
+    const allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg+xml', 'bmp'];
+    const safeExt = allowedExtensions.includes(ext.toLowerCase()) ? ext : 'bin';
+    const filename = `upload.${safeExt}`;
 
     // Pin via nft.storage
     const file = new File([buffer], filename, { type: mimeType });

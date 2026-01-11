@@ -27,10 +27,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Install flyctl
-        run: |
-          curl -L https://fly.io/install.sh | sh
-          sudo mv ~/.fly/bin/flyctl /usr/local/bin/flyctl
+      - name: Setup Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly
         env:
@@ -45,5 +43,4 @@ jobs:
             echo "No fly.toml found. If you haven't created one run 'flyctl launch' locally and commit fly.toml."
             exit 1
           fi
-          flyctl auth token "$FLY_API_TOKEN"
           flyctl deploy --config fly.toml --app "${FLY_APP_NAME:-}" --build-arg NODE_ENV=production

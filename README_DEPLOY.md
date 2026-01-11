@@ -148,25 +148,26 @@ All three workflows trigger on push to the `main` branch. Each workflow:
    - Create a new project
    - Connect your GitHub repository (recommended) OR use CLI deployment
 
-2. **Get Project ID & Token:**
+2. **Get Service ID & Token:**
    
    Using Railway Dashboard:
-   - Go to Project Settings
-   - Copy Project ID
-   - Generate a deployment token
+   - Go to your Project
+   - Select your Service
+   - In Settings, copy the Service ID
+   - In Account Settings, generate a deployment token
 
    Using Railway CLI:
    ```bash
    npm i -g @railway/cli
    railway login
    railway link
-   # View project details
+   # View service details
    railway status
    ```
 
 3. **Add GitHub Secrets:**
    - `RAILWAY_TOKEN` (required)
-   - `RAILWAY_PROJECT_ID` (optional if using GitHub integration)
+   - `RAILWAY_SERVICE_ID` (required for CLI deployment)
 
 4. **Configure Railway Environment Variables:**
    - In Railway dashboard, go to your service
@@ -175,7 +176,7 @@ All three workflows trigger on push to the `main` branch. Each workflow:
      - `PINATA_JWT` or `PINATA_API_KEY` and `PINATA_SECRET_API_KEY`
      - All other required variables from `.env.example`
 
-**Note:** If you enable Railway's GitHub integration in the dashboard, you may not need the `RAILWAY_PROJECT_ID` secret as Railway will automatically deploy on push.
+**Note:** Railway's GitHub integration (recommended) automatically deploys on push and doesn't require `RAILWAY_TOKEN` or `RAILWAY_SERVICE_ID` secrets. The workflow above is for CLI-based deployment.
 
 ## IPFS Pinning API
 
@@ -321,7 +322,9 @@ Add these secrets to your GitHub repository at Settings → Secrets and variable
 - **`RAILWAY_TOKEN`** (required for Railway deploy)
   - Get from Railway project settings
 
-- `RAILWAY_PROJECT_ID` (optional if GitHub integration enabled)
+- **`RAILWAY_SERVICE_ID`** (required for CLI deployment)
+  - Get from Railway service settings or `railway status`
+  - Not needed if using Railway GitHub integration
 
 ### Platform Dashboard Configuration
 
