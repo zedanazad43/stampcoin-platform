@@ -1,1 +1,2 @@
-        tags: ghcr.io/${{ github.repository_owner }}-$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):latest
+
+tags: ghcr.io/${{ github.repository_owner }}/stampcoin-platform:latest
