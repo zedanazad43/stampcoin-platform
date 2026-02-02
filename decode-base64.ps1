@@ -1,0 +1,6 @@
+# Decode base64 string
+$base64String = "Ly8gaW5kZXgudHN4IChCdW4gdjEuMyBydW50aW1lKQppbXBvcnQgeyBIb25vIH0gZnJvbSAiaG9ub0A0IjsKaW1wb3J0IHsgY29ycyB9IGZyb20gJ2hvbm8vY29ycyc7Cgpjb25zdCBhcHAgPSBuZXcgSG9ubygpOwoKYXBwLnVzZSgiLyoiLCBjb3JzKCkpOwphcHAuZ2V0KCIvIiwgKGMpID0+IGMudGV4dCgiSGVsbG8gd29ybGQhIikpOwphcHAuZ2V0KCIvYXBpL2hlYWx0aCIsIChjKSA9PiBjLmpzb24oeyBzdGF0dXM6ICJvayIgfSkpOwoKQnVuLnNlcnZlKHsKICBwb3J0OiBpbXBvcnQubWV0YS5lbnYuUE9SVCA/PyAzMDAwLAogIGZldGNoOiBhcHAuZmV0Y2gsCn0pOw=="
+
+$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($base64String))
+Write-Host "Decoded content:"
+Write-Host $decoded
