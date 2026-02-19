@@ -1,0 +1,1 @@
+{"name":"stampcoin-platform","version":"1.0.0","scripts":{"build":"echo 'Define your build command here - such as tsc, next build, react-scripts build, etc.'","start":"node server.js"}}
