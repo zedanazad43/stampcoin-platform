@@ -1,475 +1,238 @@
-# 🏛️ Stampcoin Platform | منصة ستامب كوين
+# 🏷️ Stampcoin Platform (STP)
 
+> **منصة تداول الطوابع البريدية الرقمية** — The world's first digital philatelic trading platform powered by blockchain technology.
+
+[![Deploy to GitHub Pages](https://github.com/zedanazad43/stampcoin-platform/actions/workflows/pages.yml/badge.svg)](https://github.com/zedanazad43/stampcoin-platform/actions/workflows/pages.yml)
+[![Build & Test](https://github.com/zedanazad43/stampcoin-platform/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/zedanazad43/stampcoin-platform/actions/workflows/build-and-test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](Dockerfile)
-
-An innovative blockchain-based digital stamps platform with wallet and marketplace features.
-
-🌐 **[Live Demo](https://zedanazad43.github.io/stp/)** | 📖 **[Documentation](docs/)** | 🛣️ **[Roadmap](docs/roadmap.html)**
+[![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org)
 
 ---
 
-## 🌍 Languages | اللغات
+## 🌐 Live Platform
 
-- **العربية** 🇸🇦 | **English** 🇬🇧 | **Deutsch** 🇩🇪 | **中文** 🇨🇳 | **Français** 🇫🇷 | **Español** 🇪🇸
+| Platform | URL |
+|----------|-----|
+| **Website** | [https://zedanazad43.github.io/stp/](https://zedanazad43.github.io/stp/) |
+| **API Server** | Deploy via Render / Railway (see below) |
+| **Android App** | Available via GitHub Releases |
 
 ---
 
-## ✨ Features | المميزات
+## ✨ Features
 
-- 🏦 **Digital Wallet API** - Create, manage, and transfer digital stamps securely
-- 🛍️ **Market Institution API** - Buy, sell, and trade digital stamps in a marketplace
-- 🔐 **Secure P2P Transfers** - Peer-to-peer transactions with full transaction history
-- 🌐 **Multi-Language Support** - 6+ languages supported
-- 🐳 **Docker Ready** - Full Docker and Docker Compose support
-- ⚡ **High Performance** - Built with Express.js and Node.js
+| Feature | Description |
+|---------|-------------|
+| 🏪 **Digital Stamp Market** | Buy and sell rare philatelic NFTs in a live marketplace |
+| 🔴 **Live Auctions** | Compete in real-time auctions for the world's rarest stamps |
+| 💼 **STP/NFT Wallet** | Manage STP token balance and NFT stamp portfolio |
+| 🎨 **Stamp-to-NFT Minting** | Authenticate and mint physical stamps as blockchain NFTs |
+| 📚 **Stamp Archive** | Searchable database of 50,000+ historical stamps |
+| 📊 **Analytics Dashboard** | Real-time market statistics, charts, and trading data |
+| 🔐 **Secure Transfers** | Peer-to-peer STP token and stamp transfers |
+| 📱 **Mobile Ready** | Responsive PWA + Android/iOS build support |
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js >= 16.x
-- Git
-- Docker (optional, recommended)
-
-### Using Docker (Recommended)
-
 ```bash
 # Clone repository
-git clone https://github.com/zedanazad43/stp.git
-cd stp
+git clone https://github.com/zedanazad43/stampcoin-platform.git
+cd stampcoin-platform
 
-# Start with Docker Compose
-docker compose up --build
-
-# Access at http://localhost:8080
-```
-
-### Local Development
-
-```bash
 # Install dependencies
 npm install
 
-# Start development server
-npm run dev
-
-# Access at http://localhost:8080
-```
-
----
-
-## 📦 Installation & Setup
-
-See detailed guides:
-- **[Installation Guide](INSTALLATION.md)**
-- **[Windows Setup](WINDOWS_SETUP.md)**
-- **[Quick Start](QUICKSTART.md)**
-
----
-
-## 🔌 API Documentation
-
-### Wallet API | واجهة برمجة المحفظة
-Complete wallet management endpoints and examples: **[WALLET_API.md](WALLET_API.md)**
-
-### Market API | واجهة برمجة السوق
-Complete marketplace endpoints and examples: **[MARKET_API.md](MARKET_API.md)**
-
----
-
-## 🛠️ Development
-
-```bash
-# Install dependencies
-npm install
-
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
+# Start the server
 npm start
-
-# Run tests
-npm test
-
-# Run linting
-npm lint
 ```
 
-### Docker Commands
+The server listens on port `10000` by default (configurable via `PORT` environment variable).
+
+Open [http://localhost:10000](http://localhost:10000) to view the platform.
+
+---
+
+## 🔌 API Reference
+
+### Wallet API
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/wallet/create` | Create a new STP wallet |
+| GET | `/api/wallet/:userId` | Get wallet by user ID |
+| POST | `/api/wallet/transfer` | Transfer STP between wallets |
+| GET | `/api/wallet/:userId/transactions` | Get transaction history |
+| POST | `/api/wallet/:userId/stamps` | Add stamp to wallet (🔒 auth) |
+| POST | `/api/wallet/:userId/topup` | Top up wallet balance (🔒 auth) |
+| GET | `/api/wallets` | List all wallets (🔒 auth) |
+
+### Market API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/market/items` | Get all market items |
+| POST | `/api/market/items` | List a new stamp for sale |
+| GET | `/api/market/items/:itemId` | Get item by ID |
+| PUT | `/api/market/items/:itemId` | Update item (seller only) |
+| POST | `/api/market/items/:itemId/buy` | Purchase a stamp |
+| DELETE | `/api/market/items/:itemId` | Remove item (seller only) |
+| GET | `/api/market/transactions` | Get trade history |
+
+### Auction API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/auctions` | List all auctions (`?status=active`) |
+| POST | `/api/auctions` | Create a new auction |
+| GET | `/api/auctions/:id` | Get auction by ID |
+| POST | `/api/auctions/:id/bid` | Place a bid |
+
+### NFT API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/nft/stamps` | List NFT stamps (`?ownerId=`) |
+| POST | `/api/nft/mint` | Mint a new NFT stamp |
+| GET | `/api/nft/stamps/:tokenId` | Get NFT stamp by token ID |
+
+### Blockchain API
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/blockchain/info` | Get token metadata |
+| GET | `/api/blockchain/supply` | Get STP token supply stats |
+| POST | `/api/blockchain/mint` | Mint STP tokens (🔒 auth) |
+| GET | `/api/blockchain/balance/:address` | Get address STP balance |
+| GET | `/api/blockchain/mint/events` | Mint audit log (🔒 auth) |
+
+### User API
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/users/register` | Register a new user + create wallet |
+| GET | `/api/users/:userId` | Get user profile |
+
+Full documentation: [WALLET_API.md](WALLET_API.md) · [MARKET_API.md](MARKET_API.md)
+
+---
+
+## ⚙️ Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `10000` | Server port |
+| `SYNC_TOKEN` | _(none)_ | Bearer token for protected endpoints |
+| `NODE_ENV` | `development` | Set `production` to enforce auth |
+| `STP_CONTRACT_ADDRESS` | Pending | On-chain ERC-20 contract address |
+| `ALLOWED_ORIGINS` | localhost | Comma-separated CORS origins |
+
+---
+
+## 🏗️ Architecture
+
+```
+stampcoin-platform/
+├── server.js          # Express.js API server (all routes)
+├── wallet.js          # Wallet & transaction business logic
+├── market.js          # Marketplace business logic
+├── blockchain.js      # STP token (BEP-20 compatible) logic
+├── index.js           # Entry point
+├── public/
+│   └── index.html     # Full-featured SPA frontend (Tailwind + Alpine.js)
+├── tests/             # Jest unit tests
+├── .github/
+│   └── workflows/
+│       ├── pages.yml              # Auto-deploy to GitHub Pages
+│       └── build-and-test.yml     # CI: build & test on push/PR
+├── Dockerfile         # Container for API server
+├── render.yaml        # Render.com deployment config
+└── README.md
+```
+
+---
+
+## 🚢 Deployment
+
+### GitHub Pages (Frontend — Automatic)
+Every push to `main` automatically deploys the frontend to:
+```
+https://zedanazad43.github.io/stp/
+```
+
+### Render.com (API Server)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+### Railway (API Server)
+Add `RAILWAY_TOKEN` to repository secrets, then push to `main`.
+
+### Docker
+```bash
+docker build -t stampcoin-platform .
+docker run -p 10000:10000 -e SYNC_TOKEN=your_secret stampcoin-platform
+```
+
+---
+
+## 📱 Mobile App
+
+The platform is a Progressive Web App (PWA) — install it directly from the browser.
+
+For native Android/iOS builds using Expo:
+```bash
+cd mobile          # (create with: npx create-expo-app mobile)
+npm install
+npx expo build:android   # Android APK
+```
+
+---
+
+## 🧪 Testing
 
 ```bash
-# Build Docker image
-npm run docker:build
-
-# Run Docker container
-npm run docker:run
-
-# Or use Docker Compose
-docker compose up
-docker compose down
+npm test
 ```
 
 ---
 
-## 📚 Full Documentation
+## 🪙 STP Token Economics
 
-- 🌐 **[Online Documentation Portal](https://zedanazad43.github.io/stp/)**
-- 📁 **[docs/ Directory](docs/)**
-- 🔒 **[Security Guidelines](SECURITY.md)**
-- 📋 **[Deployment Guide](DEPLOYMENT.md)**
-- 🤝 **[Contributing Guide](CONTRIBUTING.md)**
+| Parameter | Value |
+|-----------|-------|
+| **Name** | Stampcoin |
+| **Symbol** | STP |
+| **Total Supply** | 421,000,000 STP |
+| **Network** | EVM-compatible |
+| **Standard** | ERC-20 (BEP-20 compatible) |
 
----
-
-## 🔒 Security
-
-For security information and guidelines, see **[SECURITY.md](SECURITY.md)**.
-
-⚠️ **Important**: Always use HTTPS in production and keep your private keys secure.
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see **[LICENSE](LICENSE)** for details.
+| Distribution | % | Amount |
+|-------------|---|--------|
+| Public ICO Sale | 20% | 84,200,000 |
+| Ecosystem & Partners | 20% | 84,200,000 |
+| Community & Rewards | 20% | 84,200,000 |
+| Liquidity Pool | 15% | 63,150,000 |
+| Team & Founders | 15% | 63,150,000 |
+| Reserve | 10% | 42,100,000 |
 
 ---
 
-## 👥 Contributing
+## 🤝 Contributing
 
-Contributions are welcome! See **[CONTRIBUTING.md](CONTRIBUTING.md)** for guidelines.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
 ## 📧 Contact & Support
 
 - **Author**: Azad Zedan
-- **Repository**: [github.com/zedanazad43/stp](https://github.com/zedanazad43/stp)
-- **Issues**: [GitHub Issues](https://github.com/zedanazad43/stp/issues)
+- **Repository**: [github.com/zedanazad43/stampcoin-platform](https://github.com/zedanazad43/stampcoin-platform)
+- **Issues**: [GitHub Issues](https://github.com/zedanazad43/stampcoin-platform/issues)
 
 ---
 
-## 🌐 Website
+## 📄 License
 
-**Live Website**: https://zedanazad43.github.io/stp/
-
----
-
-## Changelog
-
-See **[CHANGELOG.md](CHANGELOG.md)** for version history and updates.
+MIT © 2025 [zedanazad43](https://github.com/zedanazad43)
 
 ---
 
-**Last Updated**: 2025
-**Status**: ✅ Active Development
-
----
-
-## 🤖 إعداد GitHub Actions Runner ونشر المشروع
-
-هذا المشروع يدعم استخدام GitHub Actions Runner المضيف الذاتي (Self-hosted Runner) لبناء ونشر المشروع تلقائيًا.
-
-### المتطلبات الأساسية
-- حساب GitHub
-- وصول إلى مستودع المشروع
-- نظام التشغيل Windows (مع PowerShell)
-
-### إعداد Runner المضيف الذاتي
-
-#### الخطوة 1: تنزيل GitHub Actions Runner
-
-1. افتح PowerShell
-2. أنشئ مجلدًا للـ Runner:
-   ```
-   mkdir actions-runner
-   cd actions-runner
-   ```
-3. قم بتنزيل Runner (نسخة Windows):
-   ```
-   curl -o actions-runner-win-x64-2.331.0.zip -L https://github.com/actions/runner/releases/download/v2.331.0/actions-runner-win-x64-2.331.0.zip
-   ```
-4. قم بفك ضغط الملف:
-   ```
-   Expand-Archive -Path actions-runner-win-x64-2.331.0.zip -DestinationPath .
-   ```
-
-#### الخطوة 2: الحصول على عنوان URL ورمز Runner
-
-1. سجل الدخول إلى حساب GitHub الخاص بك
-2. اذهب إلى مستودعك
-3. من القمة اليمنى، انقر على 'Settings'
-4. في القمة اليسرى، انقر على 'Actions'
-5. في القمة اليسرى، انقر على 'Runners'
-6. انقر على زر 'New runner'
-7. انسخ عنوان URL ورمز Runner الظاهرين لك
-
-#### الخطوة 3: تكوين الـ Runner
-
-1. في PowerShell، انتقل إلى مجلد الـ Runner:
-   ```
-   cd C:\Users\azadz\actions-runner
-   ```
-2. قم بتكوين الـ Runner باستخدام عنوان URL ورمزك:
-   ```
-   .\config.cmd --url YOUR_REPO_URL --token YOUR_RUNNER_TOKEN
-   ```
-   استبدل `YOUR_REPO_URL` و`YOUR_RUNNER_TOKEN` بالقيم الفعلية
-
-#### الخطوة 4: تشغيل الـ Runner
-
-1. بعد التكوين بنجاح، قم بتشغيل الـ Runner:
-   ```
-   .\run.cmd
-   ```
-
-### إعداد سير العمل (Workflow) لنشر المشروع
-
-لقد قمنا مسبقًا بإنشاء ملف سير العمل في `.github/workflows/publish.yml`. هذا الملف يقوم بالآتي:
-
-1. يستنسخ المستودع عند كل دفع إلى الفرع الرئيسي
-2. يثبت Node.js والتبعيات
-3. يقوم ببناء المشروع
-4. ينشر المشروع
-
-لتخصيص سير العمل حسب احتياجاتك، قم بتعديل قسم "Deploy project" في ملف `publish.yml`.
-
-### نشر المشروع
-
-بعد إعداد Runner وتكوين سير العمل، سيتم نشر المشروع تلقائيًا عند كل دفع إلى الفرع الرئيسي. يمكنك مراقبة سير العمل في قسم "Actions" في مستودعك على GitHub.
-
-### استكشاف الأخطاء وإصلاحها
-
-- إذا لم يبدأ الـ Runner، تحقق من وجود رسائل خطأ في نافذة PowerShell
-- تأكد من أن عنوان URL ورمز Runner صحيحان وغير منتهي الصلاحية
-- تأكد من أن الـ Runner لديه الأذونات الكافية للوصول إلى ملفات المشروع
-# Stampcoin منصة رقمية | Digital Platform | Digitale Plattform
-
-## العربية 🇸🇦
-
-### الوصف
-Stampcoin منصة رقمية مبتكرة مبنية على تكنولوجيا البلوكشين، متخصصة في جمع وتداول الطوابع الرقمية والمكافآت وهدايا الولاء.
-
-### المميزات
-- محفظة طوابع رقمية
-- تعاملات آمنة بين المستخدمين
-- سوق طوابع رقمية ومقتنيات حديثة
-- إدارة ملفات المستخدم والتحقق
-- تكامل API وخدمات إضافية
-
-### الإنطلاق
-```
-git clone https://github.com/stampcoin-platform/stampcoin-platform.git
-cd stampcoin-platform
-```
-لمزيد من المعلومات: [INSTALLATION.md](INSTALLATION.md)
-
----
-
-## English 🇬🇧
-
-### Description
-Stampcoin is an innovative platform for digital currency based on blockchain tech, focused on digital stamps, rewards, and loyalty tokens.
-
-### Features
-- Digital stamps wallet
-- Secure peer-to-peer transfers
-- Marketplace for digital stamps & collectibles
-- User profile & verification
-- API integration
-
-### Start
-```
-git clone https://github.com/stampcoin-platform/stampcoin-platform.git
-cd stampcoin-platform
-```
-See [INSTALLATION.md](INSTALLATION.md) for more.
-
----
-
-## Deutsch 🇩🇪
-
-### Beschreibung
-Stampcoin ist eine innovative Plattform auf Blockchain-Basis für digitale Briefmarken, Prämien und loyale Sammler.
-
-### Haupt-Features
-- Digitale Wallet für Stampcoins
-- Sichere Nutzer-Transaktionen
-- Märkte für Sammlerstücke und Stampcoins
-- Nutzerprofile & Verifikationen
-- API-Integration
-
-### Start
-```
-git clone https://github.com/stampcoin-platform/stampcoin-platform.git
-cd stampcoin-platform
-```
-Weitere Infos: [INSTALLATION.md](INSTALLATION.md)
-
----
-
-## النشر والتشغيل / Deployment & Running / Bereitstellung & Ausführung
-
-### العربية 🇸🇦
-#### المتطلبات الأساسية
-- Node.js >= 16.x
-- Python >= 3.8
-- Git
-
-#### بدء التطوير
-```bash
-npm install
-npm run dev
-```
-
-#### البناء للإنتاج
-```bash
-npm run build
-npm run start
-```
-
-#### الاختبارات
-```bash
-npm test
-npm run lint
-```
-
-### English 🇬🇧
-#### Prerequisites
-- Node.js >= 16.x
-- Python >= 3.8
-- Git
-
-#### Development
-```bash
-npm install
-npm run dev
-```
-
-#### Production Build
-```bash
-npm run build
-npm run start
-```
-
-#### Testing
-```bash
-npm test
-npm run lint
-```
-
-### Deutsch 🇩🇪
-#### Voraussetzungen
-- Node.js >= 16.x
-- Python >= 3.8
-- Git
-
-#### Entwicklung
-```bash
-npm install
-npm run dev
-```
-
-#### Produktion
-```bash
-npm run build
-npm run start
-```
-
-#### Tests
-```bash
-npm test
-npm run lint
-```
-
----
-
-## الأمان / Security / Sicherheit
-
-⚠️ **تحذير أمني مهم** / **SECURITY WARNING** / **SICHERHEITSWARNUNG**
-
-- لا تشارك مفاتيح API أو كلمات المرور في المستودع
-- استخدم متغيرات البيئة (.env) للبيانات الحساسة
-- راجع [SECURITY.md](SECURITY.md) للمزيد من التفاصيل
-
----
-
-### Contributions
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-### License
-
-See LICENSE for license information.
-# Stampcoin منصة / Platform / Plattform
-
----
-
-## العربية 🇸🇦
-
-### الوصف
-Stampcoin منصة رقمية مبتكرة مبنية على تكنولوجيا البلوكشين، متخصصة في جمع وتداول الطوابع الرقمية والمكافآت وهدايا الولاء.
-
-### المميزات
-- محفظة طوابع رقمية
-- تعاملات آمنة بين المستخدمين
-- سوق طوابع رقمية ومقتنيات حديثة
-- إدارة ملفات المستخدم والتحقق
-- تكامل API وخدمات إضافية
-
-### الإنطلاق
-```
-git clone https://github.com/stampcoin-platform/stampcoin-platform.git
-cd stampcoin-platform
-```
-لمزيد من المعلومات: [INSTALLATION.md](INSTALLATION.md)
-
----
-
-## English 🇬🇧
-
-### Description
-Stampcoin is an innovative platform for digital currency based on blockchain tech, focused on digital stamps, rewards, and loyalty tokens.
-
-### Features
-- Digital stamps wallet
-- Secure peer-to-peer transfers
-- Marketplace for digital stamps & collectibles
-- User profile & verification
-- API integration
-
-### Start
-```
-git clone https://github.com/stampcoin-platform/stampcoin-platform.git
-cd stampcoin-platform
-```
-See [INSTALLATION.md](INSTALLATION.md) for more.
-
----
-
-## Deutsch 🇩🇪
-
-### Beschreibung
-Stampcoin ist eine innovative Plattform auf Blockchain-Basis für digitale Briefmarken, Prämien und loyale Sammler.
-
-### Haupt-Features
-- Digitale Wallet für Stampcoins
-- Sichere Nutzer-Transaktionen
-- Märkte für Sammlerstücke und Stampcoins
-- Nutzerprofile & Verifikationen
-- API-Integration
-
-### Start
-```
-git clone https://github.com/stampcoin-platform/stampcoin-platform.git
-cd stampcoin-platform
-```
-Weitere Infos: [INSTALLATION.md](INSTALLATION.md)
->>>>>>> a222ad6685074a5b979a259945c1e6c46931445b
+*Built with ❤️ for the global philatelic community*

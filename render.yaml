@@ -1,0 +1,21 @@
+# Render configuration for Stampcoin Platform
+# This file defines the service configuration for Render
+
+services:
+  - type: web
+    name: stampcoin-platform
+    env: node
+    buildCommand: npm ci
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Add any additional environment variables required by your app
+      # - key: SYNC_TOKEN
+      #   value: your-sync-token-here
+      # - key: BASE_URL
+      #   value: https://your-service-name.onrender.com
+    # healthCheckPath uses Render native Node.js health check (no dockerfilePath)
+    healthCheckPath: /health
