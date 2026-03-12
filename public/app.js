@@ -222,6 +222,103 @@ function registerSubmit(formId, handler) {
     }
 }
 
+    // ── Admin token helpers ───────────────────────────────────────────────────────
+    function getAdminToken() {
+        return sessionStorage.getItem("stp_admin_token") || "";
+    }
+
+    function setAdminToken(token) {
+        sessionStorage.setItem("stp_admin_token", token);
+    }
+
+    function clearAdminToken() {
+        sessionStorage.removeItem("stp_admin_token");
+    }
+
+    async function adminRequest(path, options = {}) {
+        const token = getAdminToken();
+        if (!token) {
+            throw new Error("Admin session not active. Enter your sync token first.");
+        }
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            ...(options.headers || {})
+        };
+        return requestJson(path, { ...options, headers });
+    }
+
+    function updateAdminUI(unlocked) {
+        const gate = document.getElementById("adminGate");
+        const console_ = document.getElementById("adminConsole");
+        const pill = document.getElementById("adminStatusPill");
+        if (gate) gate.hidden = unlocked;
+        if (console_) console_.hidden = !unlocked;
+        if (pill) {
+            pill.innerHTML = unlocked
+                ? '<i class="fa-solid fa-unlock"></i> Unlocked'
+                : '<i class="fa-solid fa-lock"></i> Locked';
+            pill.style.background = unlocked ? "rgba(15,143,111,0.14)" : "";
+            pill.style.color = unlocked ? "var(--green)" : "";
+        }
+    }
+
+    // ── Token distribution strip ──────────────────────────────────────────────────
+    async function loadTokenDist() {
+        try {
+            const token = await requestJson("api/token");
+            setText("distName", token.name || "--");
+            setText("distSymbol", token.symbol || "--");
+            setText("distCirculating", formatNumber(token.circulatingSupply ?? token.totalSupply));
+            setText("distMax", formatNumber(token.maxSupply ?? token.totalSupply));
+            setText("distChain", token.blockchain || token.network || "STP Chain");
+            setText("distDecimals", String(token.decimals ?? "18"));
+        } catch {
+            // non-critical — strip stays at defaults
+        }
+    }
+
+    // ── Listing type styling ──────────────────────────────────────────────────────
+    const TYPE_GRADIENT = {
+        stamp:       "linear-gradient(135deg,#10325d 0%,#2d67c8 100%)",
+        collectible: "linear-gradient(135deg,#7c4a0c 0%,#c98b2a 100%)",
+        limited:     "linear-gradient(135deg,#6b1212 0%,#c25454 100%)"
+    };
+    const TYPE_ICON = { stamp: "fa-stamp", collectible: "fa-gem", limited: "fa-fire" };
+    const TYPE_BADGE = {
+        stamp:       "background:rgba(16,50,93,0.12);color:var(--navy)",
+        collectible: "background:rgba(201,139,42,0.14);color:var(--gold)",
+        limited:     "background:rgba(194,84,84,0.12);color:var(--red)"
+    };
+
+    function listingCardHtml(item) {
+        const t = (item.type || "").toLowerCase();
+        const grad = TYPE_GRADIENT[t] || "linear-gradient(135deg,#2a3848 0%,#44546f 100%)";
+        const icon = TYPE_ICON[t] || "fa-tag";
+        const badge = TYPE_BADGE[t] || "background:rgba(17,35,63,0.07);color:var(--ink-soft)";
+        const sold = item.status === "sold";
+        return `
+            <article class="listing-card${sold ? " listing-sold" : ""}">
+                <div class="listing-img" style="background:${grad}">
+                    <i class="fa-solid ${icon}"></i>
+                    ${sold ? '<span class="sold-overlay">Sold</span>' : ""}
+                </div>
+                <div class="listing-body">
+                    <span class="listing-type" style="${badge}">${escapeHtml(item.type || "collectible")}</span>
+                    <h4>${escapeHtml(item.name || "Untitled Item")}</h4>
+                    <p>${escapeHtml(item.description || "No description provided for this listing.")}</p>
+                    <div class="listing-meta">
+                        <div>
+                            <div class="listing-price">${formatNumber(item.price || 0)} STP</div>
+                            <small>Seller: ${escapeHtml(item.sellerId || "unknown")}</small>
+                        </div>
+                        <span class="json-chip">${escapeHtml(item.status || "active")}</span>
+                    </div>
+                </div>
+            </article>
+        `;
+    }
+
 document.addEventListener("DOMContentLoaded", () => {
     registerSubmit("createWalletForm", async event => {
         event.preventDefault();
@@ -378,7 +475,170 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    refreshHeroMetrics();
-    loadListings();
-    loadHealth();
-});
+    // ── Filter bar live updates ───────────────────────────────────────────────
+    ["filterType", "filterStatus", "filterSort"].forEach(id => {
+        document.getElementById(id)?.addEventListener("change", loadListings);
+    });
+    document.getElementById("filterSearch")?.addEventListener("input", () => {
+        clearTimeout(window._filterDebounce);
+        window._filterDebounce = setTimeout(loadListings, 260);
+    });
+
+    // ── Admin unlock / lock ──────────────────────────────────────────────────
+    registerSubmit("adminUnlockForm", async event => {
+        event.preventDefault();
+        const token = document.getElementById("adminTokenInput").value.trim();
+        if (!token) {
+            renderFeedback("adminUnlockResult", "Token cannot be empty.", true);
+            return;
+        }
+        try {
+            const res = await fetch(apiPath("api/wallets"), {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.status === 401 || res.status === 403) {
+                throw new Error("Token rejected");
+            }
+            setAdminToken(token);
+            updateAdminUI(true);
+            event.target.reset();
+        } catch {
+            renderFeedback("adminUnlockResult", "Token rejected — check your SYNC_TOKEN value.", true);
+        }
+    });
+
+    document.getElementById("adminLockBtn")?.addEventListener("click", () => {
+        clearAdminToken();
+        updateAdminUI(false);
+    });
+
+    if (getAdminToken()) {
+        updateAdminUI(true);
+    }
+
+    // ── Admin: all wallets ────────────────────────────────────────────────────
+    document.getElementById("adminAllWalletsBtn")?.addEventListener("click", async () => {
+        try {
+            const data = await adminRequest("api/wallets");
+            renderTable(
+                "adminWalletsResult",
+                [
+                    { label: "User ID", render: r => r.userId || "--" },
+                    { label: "Name", render: r => r.userName || "--" },
+                    { label: "Balance", render: r => formatNumber(r.balance || 0) },
+                    { label: "Stamps", render: r => Array.isArray(r.stamps) ? String(r.stamps.length) : "0" }
+                ],
+                Array.isArray(data) ? data : []
+            );
+        } catch (error) {
+            renderFeedback("adminWalletsResult", error.message, true);
+        }
+    });
+
+    // ── Admin: top-up ─────────────────────────────────────────────────────────
+    registerSubmit("adminTopupForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("adminTopupUserId").value.trim();
+        const amount = Number(document.getElementById("adminTopupAmount").value);
+        try {
+            const payload = await adminRequest(`api/wallet/${encodeURIComponent(userId)}/topup`, {
+                method: "POST",
+                body: JSON.stringify({ amount })
+            });
+            renderJson("adminTopupResult", payload, "Top-up applied");
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("adminTopupResult", error.message, true);
+        }
+    });
+
+    // ── Admin: mint tokens ────────────────────────────────────────────────────
+    registerSubmit("adminMintForm", async event => {
+        event.preventDefault();
+        const to = document.getElementById("adminMintTo").value.trim();
+        const amount = Number(document.getElementById("adminMintAmount").value);
+        try {
+            const payload = await adminRequest("api/blockchain/mint", {
+                method: "POST",
+                body: JSON.stringify({ to, amount })
+            });
+            renderJson("adminMintResult", payload, "Mint completed");
+            event.target.reset();
+            refreshHeroMetrics();
+        } catch (error) {
+            renderFeedback("adminMintResult", error.message, true);
+        }
+    });
+
+    // ── Admin: mint events ────────────────────────────────────────────────────
+    document.getElementById("adminMintEventsBtn")?.addEventListener("click", async () => {
+        try {
+            const data = await adminRequest("api/blockchain/mint/events");
+            renderTable(
+                "adminMintEventsResult",
+                [
+                    { label: "To", render: r => r.to || "--" },
+                    { label: "Amount", render: r => formatNumber(r.amount || 0) },
+                    { label: "Date", render: r => formatDate(r.timestamp) }
+                ],
+                Array.isArray(data) ? data : []
+            );
+        } catch (error) {
+            renderFeedback("adminMintEventsResult", error.message, true);
+        }
+    });
+
+    // ── Admin: add stamp ──────────────────────────────────────────────────────
+    registerSubmit("adminAddStampForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("adminStampUserId").value.trim();
+        const stampId = document.getElementById("adminStampId").value.trim();
+        const name = document.getElementById("adminStampName").value.trim();
+        try {
+            const payload = await adminRequest(`api/wallet/${encodeURIComponent(userId)}/stamps`, {
+                method: "POST",
+                body: JSON.stringify({ stampId, name })
+        async function loadListings() {
+            const target = document.getElementById("featuredListings");
+            const label = document.getElementById("listingCountLabel");
+            if (!target) return;
+
+            target.innerHTML = '<div class="empty-state">Loading featured listings...</div>';
+
+            try {
+                const searchVal = (document.getElementById("filterSearch")?.value || "").toLowerCase().trim();
+                const typeVal   = document.getElementById("filterType")?.value || "";
+                const statusVal = document.getElementById("filterStatus")?.value || "";
+                const sortVal   = document.getElementById("filterSort")?.value || "";
+
+                const params = new URLSearchParams();
+                if (typeVal)   params.set("type", typeVal);
+                if (statusVal) params.set("status", statusVal);
+                const qs = params.toString();
+
+                const items = await requestJson(`api/market/items${qs ? `?${qs}` : ""}`);
+                let listings = Array.isArray(items) ? items : [];
+
+                if (searchVal) {
+                    listings = listings.filter(item =>
+                        (item.name || "").toLowerCase().includes(searchVal) ||
+                        (item.description || "").toLowerCase().includes(searchVal) ||
+                        (item.sellerId || "").toLowerCase().includes(searchVal)
+                    );
+                }
+                if (sortVal === "price-asc")  listings = [...listings].sort((a, b) => (a.price || 0) - (b.price || 0));
+                if (sortVal === "price-desc") listings = [...listings].sort((a, b) => (b.price || 0) - (a.price || 0));
+                if (sortVal === "newest")     listings = [...listings].sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+                if (label) label.textContent = `${listings.length} item${listings.length === 1 ? "" : "s"}`;
+
+                if (!listings.length) {
+                    target.innerHTML = '<div class="listing-empty">No listings match your filters. Try adjusting them or publish a new item below.</div>';
+                    return;
+                }
+                target.innerHTML = listings.map(listingCardHtml).join("");
+            } catch (error) {
+                if (label) label.textContent = "Unable to load";
+                target.innerHTML = `<div class="listing-empty">${escapeHtml(error.message)}</div>`;
+            }
+        }

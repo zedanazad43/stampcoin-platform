@@ -3,8 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stampcoin Platform | Digital Collectibles Marketplace</title>
-    <meta name="description" content="Professional digital collectibles marketplace for wallets, token insights, live listings, and blockchain tools.">
+    <title>Stampcoin (STP) | Digital Collectibles Marketplace &amp; Blockchain Platform</title>
+    <meta name="description" content="Stampcoin (STP) is a live digital collectibles marketplace and blockchain platform. Trade stamps, collectibles, and limited-edition assets with real on-chain settlement and wallet infrastructure.">
+    <link rel="canonical" href="https://stampcoin-platform.fly.dev/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://stampcoin-platform.fly.dev/">
+    <meta property="og:title" content="Stampcoin (STP) | Digital Collectibles Marketplace">
+    <meta property="og:description" content="A professional marketplace for digital stamps, collectibles, and limited-edition assets. Live wallets, real token economics, and blockchain settlement — deployed and demo-ready.">
+    <meta property="og:image" content="https://stampcoin-platform.fly.dev/og-cover.png">
+    <meta property="og:site_name" content="Stampcoin Platform">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Stampcoin (STP) | Digital Collectibles Marketplace">
+    <meta name="twitter:description" content="Live blockchain marketplace for digital stamps and collectibles. Real wallets, token economics, and on-chain settlement.">
+    <meta name="twitter:image" content="https://stampcoin-platform.fly.dev/og-cover.png">
+
+    <!-- Structured Data: Organization -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Stampcoin Platform",
+        "url": "https://stampcoin-platform.fly.dev/",
+        "description": "Digital collectibles marketplace and blockchain infrastructure for trading stamps, collectibles, and limited-edition digital assets.",
+        "email": "stampcoin.contact@gmail.com",
+        "sameAs": [
+            "https://github.com/zedanazad43/stp",
+            "https://github.com/zedanazad43/stampcoin-platform"
+        ]
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,34 +58,35 @@
                 <a href="#wallet-lab">Wallet Lab</a>
                 <a href="#token-hub">Token Hub</a>
                 <a href="#ops-center">Ops Center</a>
+                <a href="#admin-panel">Admin</a>
             </nav>
-            <a class="topbar-cta" href="#wallet-lab">Launch Console</a>
+            <a class="topbar-cta" href="#marketplace">Explore Market</a>
         </header>
 
         <main>
             <section class="hero" id="hero">
                 <div class="hero-copy">
-                    <p class="eyebrow">Marketplace-grade product surface</p>
-                    <h1>Trade digital stamps through a cleaner, sharper production storefront.</h1>
+                    <p class="eyebrow">Production blockchain marketplace</p>
+                    <h1>Trade digital stamps&nbsp;&amp; collectibles on live on-chain infrastructure.</h1>
                     <p class="hero-text">
-                        Stampcoin now presents the wallet, marketplace, token, and blockchain tools inside a
-                        more polished exchange-style interface inspired by premium web marketplaces, without
-                        copying any specific site.
+                        Stampcoin (STP) delivers professional-grade marketplace infrastructure for digital
+                        collectible trading — live wallets, real token economics, on-chain settlement, and
+                        a fully-wired API deployed on Fly.io and ready for investor demonstration.
                     </p>
                     <div class="hero-actions">
-                        <a class="button button-primary" href="#marketplace">Explore Live Listings</a>
-                        <a class="button button-secondary" href="#ops-center">View System Health</a>
+                        <a class="button button-primary" href="#marketplace">Browse Live Listings</a>
+                        <a class="button button-secondary" href="#token-hub">Token Fundamentals</a>
                     </div>
                     <div class="hero-badges">
-                        <span><i class="fa-solid fa-layer-group"></i> Wallet + Market + Token</span>
-                        <span><i class="fa-solid fa-shield-halved"></i> Live production API wiring</span>
-                        <span><i class="fa-solid fa-bolt"></i> Fly.io deployment ready</span>
+                        <span><i class="fa-solid fa-coins"></i> STP Token + On-chain Wallets</span>
+                        <span><i class="fa-solid fa-shield-halved"></i> Auth-protected Admin API</span>
+                        <span><i class="fa-solid fa-rocket"></i> Live on Fly.io</span>
                     </div>
                 </div>
 
                 <div class="hero-panel">
                     <div class="panel-head">
-                        <span>Live Operations Snapshot</span>
+                        <span>Live Platform Snapshot</span>
                         <span class="status-pill" id="heroHealthPill">Checking</span>
                     </div>
                     <div class="metric-grid">
@@ -81,18 +114,46 @@
                 </div>
             </section>
 
+            <!-- Token distribution strip -->
+            <section class="token-dist-strip" id="tokenDist">
+                <div class="dist-card">
+                    <span class="dist-label">Token</span>
+                    <strong class="dist-value" id="distName">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Symbol</span>
+                    <strong class="dist-value" id="distSymbol">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Circulating Supply</span>
+                    <strong class="dist-value" id="distCirculating">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Max Supply</span>
+                    <strong class="dist-value" id="distMax">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Blockchain</span>
+                    <strong class="dist-value" id="distChain">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Decimals</span>
+                    <strong class="dist-value" id="distDecimals">--</strong>
+                </div>
+            </section>
+
             <section class="showcase-strip">
                 <article>
-                    <span>Curated collectible trading</span>
-                    <strong>Professional browse-and-buy marketplace layout</strong>
+                    <span>Curated digital collectibles</span>
+                    <strong>Browse, filter, and buy stamps and limited-edition assets with live pricing</strong>
                 </article>
                 <article>
-                    <span>Operator workflows</span>
-                    <strong>Wallet creation, transfers, health, and token discovery</strong>
+                    <span>Real wallet infrastructure</span>
+                    <strong>Create wallets, settle transfers, and track on-chain balance — wired to production APIs</strong>
                 </article>
                 <article>
-                    <span>Live infrastructure</span>
-                    <strong>GitHub Actions, GHCR, Fly.io, and warm-instance runtime</strong>
+                    <span>Investor-ready architecture</span>
+                    <strong>GitHub Actions CI/CD, GHCR Docker registry, Fly.io warm instances — demo in seconds</strong>
                 </article>
             </section>
 
@@ -103,6 +164,40 @@
                         <h2>Featured listings and trading actions</h2>
                     </div>
                     <button class="button button-ghost" id="refreshListingsBtn" type="button">Refresh listings</button>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="filterSearch" type="text" placeholder="Search listings…" aria-label="Search listings">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterType">Type</label>
+                        <select id="filterType" aria-label="Filter by type">
+                            <option value="">All types</option>
+                            <option value="stamp">Stamp</option>
+                            <option value="collectible">Collectible</option>
+                            <option value="limited">Limited</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus" aria-label="Filter by status">
+                            <option value="">All statuses</option>
+                            <option value="active">Active</option>
+                            <option value="sold">Sold</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterSort">Sort</label>
+                        <select id="filterSort" aria-label="Sort listings">
+                            <option value="">Default</option>
+                            <option value="price-asc">Price: Low → High</option>
+                            <option value="price-desc">Price: High → Low</option>
+                            <option value="newest">Newest first</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="market-grid">
@@ -268,7 +363,7 @@
                         <ul class="note-list">
                             <li>Create a wallet before listing or buying items.</li>
                             <li>Transfers settle marketplace purchases when price is above zero.</li>
-                            <li>Protected routes still honor bearer token rules in production.</li>
+                            <li>Protected routes require a bearer token — use the Admin panel below.</li>
                             <li>The UI calls the live API routes already deployed on Fly.io.</li>
                         </ul>
                     </section>
@@ -323,11 +418,12 @@
                     </section>
 
                     <section class="studio-card quote-card">
-                        <p class="eyebrow">Positioning</p>
+                        <p class="eyebrow">Investor positioning</p>
                         <blockquote>
-                            Designed as a cleaner public-facing marketplace shell around the existing Stampcoin
-                            APIs, with stronger product hierarchy, better visual rhythm, and a more credible
-                            web-market presentation.
+                            Stampcoin delivers real on-chain infrastructure for the digital collectibles
+                            vertical — not a prototype, but a live exchange platform with token economics,
+                            wallet primitives, and a production-grade API already running and deployable
+                            in minutes.
                         </blockquote>
                     </section>
                 </div>
@@ -365,12 +461,131 @@
                     </section>
                 </div>
             </section>
+
+                <!-- Admin Console (token-gated) -->
+            <section class="section" id="admin-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Admin Console</p>
+                        <h2>Operator controls for protected platform endpoints</h2>
+                    </div>
+                    <span class="admin-status-pill" id="adminStatusPill">
+                        <i class="fa-solid fa-lock"></i> Locked
+                    </span>
+                </div>
+
+                <!-- Lock gate -->
+                <div class="admin-gate" id="adminGate">
+                    <div class="admin-lock-card">
+                        <div class="admin-lock-icon"><i class="fa-solid fa-lock"></i></div>
+                        <h3>Authentication required</h3>
+                        <p>Enter your <code>SYNC_TOKEN</code> to unlock operator controls. The token is stored only in this browser session and never sent to any third party.</p>
+                        <form id="adminUnlockForm" class="stack-form admin-unlock-form">
+                            <label>
+                                <span>Sync Token</span>
+                                <input id="adminTokenInput" type="password" placeholder="Your SYNC_TOKEN value" autocomplete="current-password" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Unlock console</button>
+                        </form>
+                        <div class="result-panel" id="adminUnlockResult"></div>
+                    </div>
+                </div>
+
+                <!-- Admin console (shown after unlock) -->
+                <div class="admin-console" id="adminConsole" hidden>
+                    <div class="admin-banner">
+                        <span><i class="fa-solid fa-unlock"></i> Admin session active &mdash; all actions call live protected endpoints</span>
+                        <button class="button button-ghost compact-button" id="adminLockBtn" type="button">Lock session</button>
+                    </div>
+
+                    <div class="studio-grid two-up">
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>All wallets</h3>
+                                <span class="mini-label">GET /api/wallets</span>
+                            </div>
+                            <button class="button button-secondary compact-button" id="adminAllWalletsBtn" type="button">Load all wallets</button>
+                            <div class="table-shell" id="adminWalletsResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Top-up wallet</h3>
+                                <span class="mini-label">POST /api/wallet/:id/topup</span>
+                            </div>
+                            <form id="adminTopupForm" class="stack-form">
+                                <label>
+                                    <span>User ID</span>
+                                    <input id="adminTopupUserId" placeholder="collector-01" required>
+                                </label>
+                                <label>
+                                    <span>Amount</span>
+                                    <input id="adminTopupAmount" type="number" min="1" placeholder="500" required>
+                                </label>
+                                <button class="button button-primary" type="submit">Top up</button>
+                            </form>
+                            <div class="result-panel" id="adminTopupResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Mint tokens</h3>
+                                <span class="mini-label">POST /api/blockchain/mint</span>
+                            </div>
+                            <form id="adminMintForm" class="stack-form">
+                                <label>
+                                    <span>Recipient address</span>
+                                    <input id="adminMintTo" placeholder="0xabc...def" required>
+                                </label>
+                                <label>
+                                    <span>Amount</span>
+                                    <input id="adminMintAmount" type="number" min="1" placeholder="1000" required>
+                                </label>
+                                <button class="button button-primary" type="submit">Mint</button>
+                            </form>
+                            <div class="result-panel" id="adminMintResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Mint events</h3>
+                                <span class="mini-label">GET /api/blockchain/mint/events</span>
+                            </div>
+                            <button class="button button-secondary compact-button" id="adminMintEventsBtn" type="button">Load mint events</button>
+                            <div class="table-shell" id="adminMintEventsResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Add stamp to wallet</h3>
+                                <span class="mini-label">POST /api/wallet/:id/stamps</span>
+                            </div>
+                            <form id="adminAddStampForm" class="stack-form two-col-form">
+                                <label>
+                                    <span>User ID</span>
+                                    <input id="adminStampUserId" placeholder="collector-01" required>
+                                </label>
+                                <label>
+                                    <span>Stamp ID</span>
+                                    <input id="adminStampId" placeholder="stamp-rare-01" required>
+                                </label>
+                                <label class="full-width">
+                                    <span>Stamp name</span>
+                                    <input id="adminStampName" placeholder="Penny Black Replica" required>
+                                </label>
+                                <button class="button button-primary full-width" type="submit">Add stamp</button>
+                            </form>
+                            <div class="result-panel" id="adminAddStampResult"></div>
+                        </section>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <footer class="footer">
             <div>
                 <p class="eyebrow">Stampcoin Platform</p>
-                <h2>Digital collectible infrastructure with a cleaner market-facing identity.</h2>
+                <h2>Real blockchain infrastructure for the digital collectibles market.</h2>
             </div>
             <div class="footer-links">
                 <a href="/api/info">API Info</a>
