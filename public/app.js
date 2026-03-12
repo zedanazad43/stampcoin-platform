@@ -135,43 +135,46 @@ async function loadListings() {
     const target = document.getElementById("featuredListings");
     const label = document.getElementById("listingCountLabel");
 
-    if (!target) {
-        return;
-    }
+    if (!target) return;
 
     target.innerHTML = '<div class="empty-state">Loading featured listings...</div>';
 
     try {
-        const items = await requestJson("api/market/items");
-        const listings = Array.isArray(items) ? items.slice(0, 6) : [];
+        const searchVal = (document.getElementById("filterSearch")?.value || "").toLowerCase().trim();
+        const typeVal = document.getElementById("filterType")?.value || "";
+        const statusVal = document.getElementById("filterStatus")?.value || "";
+        const sortVal = document.getElementById("filterSort")?.value || "";
 
-        if (label) {
-            label.textContent = `${listings.length} featured item${listings.length === 1 ? "" : "s"}`;
+        const params = new URLSearchParams();
+        if (typeVal) params.set("type", typeVal);
+        if (statusVal) params.set("status", statusVal);
+        const qs = params.toString();
+
+        const items = await requestJson(`api/market/items${qs ? `?${qs}` : ""}`);
+        let listings = Array.isArray(items) ? items : [];
+
+        if (searchVal) {
+            listings = listings.filter(item =>
+                (item.name || "").toLowerCase().includes(searchVal) ||
+                (item.description || "").toLowerCase().includes(searchVal) ||
+                (item.sellerId || "").toLowerCase().includes(searchVal)
+            );
         }
 
+        if (sortVal === "price-asc") listings = [...listings].sort((a, b) => (a.price || 0) - (b.price || 0));
+        if (sortVal === "price-desc") listings = [...listings].sort((a, b) => (b.price || 0) - (a.price || 0));
+        if (sortVal === "newest") listings = [...listings].sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+        if (label) label.textContent = `${listings.length} item${listings.length === 1 ? "" : "s"}`;
+
         if (!listings.length) {
-            target.innerHTML = '<div class="listing-empty">No live listings yet. Publish an item from the seller console.</div>';
+            target.innerHTML = '<div class="listing-empty">No listings match your filters. Try adjusting them or publish a new item below.</div>';
             return;
         }
 
-        target.innerHTML = listings.map(item => `
-            <article class="listing-card">
-                <span class="listing-type">${escapeHtml(item.type || "collectible")}</span>
-                <h4>${escapeHtml(item.name || "Untitled Item")}</h4>
-                <p>${escapeHtml(item.description || "No description provided for this listing.")}</p>
-                <div class="listing-meta">
-                    <div>
-                        <div class="listing-price">${formatNumber(item.price || 0)} STP</div>
-                        <small>Seller: ${escapeHtml(item.sellerId || "unknown")}</small>
-                    </div>
-                    <span class="json-chip">${escapeHtml(item.status || "active")}</span>
-                </div>
-            </article>
-        `).join("");
+        target.innerHTML = listings.map(listingCardHtml).join("");
     } catch (error) {
-        if (label) {
-            label.textContent = "Unable to load";
-        }
+        if (label) label.textContent = "Unable to load";
         target.innerHTML = `<div class="listing-empty">${escapeHtml(error.message)}</div>`;
     }
 }
@@ -598,47 +601,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const payload = await adminRequest(`api/wallet/${encodeURIComponent(userId)}/stamps`, {
                 method: "POST",
                 body: JSON.stringify({ stampId, name })
-        async function loadListings() {
-            const target = document.getElementById("featuredListings");
-            const label = document.getElementById("listingCountLabel");
-            if (!target) return;
-
-            target.innerHTML = '<div class="empty-state">Loading featured listings...</div>';
-
-            try {
-                const searchVal = (document.getElementById("filterSearch")?.value || "").toLowerCase().trim();
-                const typeVal   = document.getElementById("filterType")?.value || "";
-                const statusVal = document.getElementById("filterStatus")?.value || "";
-                const sortVal   = document.getElementById("filterSort")?.value || "";
-
-                const params = new URLSearchParams();
-                if (typeVal)   params.set("type", typeVal);
-                if (statusVal) params.set("status", statusVal);
-                const qs = params.toString();
-
-                const items = await requestJson(`api/market/items${qs ? `?${qs}` : ""}`);
-                let listings = Array.isArray(items) ? items : [];
-
-                if (searchVal) {
-                    listings = listings.filter(item =>
-                        (item.name || "").toLowerCase().includes(searchVal) ||
-                        (item.description || "").toLowerCase().includes(searchVal) ||
-                        (item.sellerId || "").toLowerCase().includes(searchVal)
-                    );
-                }
-                if (sortVal === "price-asc")  listings = [...listings].sort((a, b) => (a.price || 0) - (b.price || 0));
-                if (sortVal === "price-desc") listings = [...listings].sort((a, b) => (b.price || 0) - (a.price || 0));
-                if (sortVal === "newest")     listings = [...listings].sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-
-                if (label) label.textContent = `${listings.length} item${listings.length === 1 ? "" : "s"}`;
-
-                if (!listings.length) {
-                    target.innerHTML = '<div class="listing-empty">No listings match your filters. Try adjusting them or publish a new item below.</div>';
-                    return;
-                }
-                target.innerHTML = listings.map(listingCardHtml).join("");
-            } catch (error) {
-                if (label) label.textContent = "Unable to load";
-                target.innerHTML = `<div class="listing-empty">${escapeHtml(error.message)}</div>`;
-            }
+            });
+            renderJson("adminAddStampResult", payload, "Stamp added to wallet");
+            event.target.reset();
+            refreshHeroMetrics();
+        } catch (error) {
+            renderFeedback("adminAddStampResult", error.message, true);
         }
+    });
+
+    refreshHeroMetrics();
+    loadListings();
+    loadHealth();
+    loadTokenDist();
+});
