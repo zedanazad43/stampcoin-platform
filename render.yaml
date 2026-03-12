@@ -1,0 +1,38 @@
+# Render configuration for Stampcoin Platform
+# Deploy at: https://render.com
+
+services:
+  - type: web
+    name: stampcoin-platform
+    env: node
+    plan: free
+    runtime: node-18
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+
+    healthCheckPath: /health
+    healthCheckInterval: 30
+    healthCheckTimeout: 3
+
+    dockerfilePath: Dockerfile
+    dockerContext: .
+
+    # Pull from latest commit on push
+    autoDeploy: true
+    branch: main
+
+    # Environment secrets (set via Render dashboard)
+    # - SYNC_TOKEN
+    # - STP_CONTRACT_ADDRESS
+    # - ALLOWED_ORIGINS
+
+    # Optional: Persistent disk for data
+    # persistentDisk:
+    #   sizeGB: 1
+    #   mountPath: /app/data

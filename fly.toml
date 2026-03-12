@@ -1,0 +1,62 @@
+# Fly.io configuration for Stampcoin Platform
+app = "stampcoin-platform"
+primary_region = "ord"
+
+[build]
+  image = "stampcoin-platform:latest"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+    timeout = "3s"
+
+  [[http_service.tcp_checks]]
+    grace_period = "5s"
+    interval = "15s"
+    timeout = "3s"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  processes = ["app"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 500
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+[metrics]
+  port = 9090
+  handlers = ["http"]
+  path = "/metrics"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
+
+[mounts]
+  source = "stampcoin_data"
+  destination = "/app/data"

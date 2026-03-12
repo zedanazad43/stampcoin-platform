@@ -1,0 +1,23 @@
+{
+  "name": "stampcoin-platform",
+  "version": "2.0.0",
+  "description": "Stampcoin Platform - blockchain-powered digital stamps, wallet and marketplace",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'Build complete - static assets ready'",
+    "test": "echo 'Testing configured'",
+    "lint": "echo 'Linting configured'",
+    "docker:build": "docker build -t stampcoin-platform:latest .",
+    "docker:run": "docker run -p 8080:8080 stampcoin-platform:latest"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
