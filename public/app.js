@@ -1,5 +1,5 @@
 const API_ROOT = "/";
-const helpers = globalThis.StampcoinAppHelpers;
+const helpers = globalThis.StampbookAppHelpers || globalThis.StampcoinAppHelpers;
 
 function apiPath(path) {
     return `${API_ROOT}${path.replace(/^\//, "")}`;
@@ -271,6 +271,20 @@ function registerSubmit(formId, handler) {
 
 document.addEventListener("DOMContentLoaded", () => {
     const communityPosts = [];
+    let storyItems = [
+        { name: "Lina", tag: "New Ottoman Set" },
+        { name: "Mazin", tag: "Auction Tonight" },
+        { name: "Rama", tag: "NFT Drop" },
+        { name: "Yousef", tag: "Rare Cover" }
+    ];
+    let peopleSuggestions = [
+        { name: "Nora Al Collector", role: "Classic Stamps" },
+        { name: "Kareem Chain", role: "NFT Curator" },
+        { name: "Sahar Philately", role: "Postal Historian" }
+    ];
+    let trendingTopics = ["#Stampbook", "#RareStamp", "#NFTPhilately", "#P2PEscrow", "#STP"];
+    let notificationFilter = "all";
+    let notificationCache = { unread: 0, notifications: [] };
     const web3State = {
         provider: null,
         signer: null,
@@ -280,6 +294,40 @@ document.addEventListener("DOMContentLoaded", () => {
         nft: null,
         stcDecimals: 18
     };
+
+    function renderStories() {
+        const rail = document.getElementById("storyRail");
+        if (!rail) return;
+        rail.innerHTML = storyItems.map(story => `
+            <article class="story-item">
+                <span class="story-avatar">${escapeHtml(story.name.slice(0, 2).toUpperCase())}</span>
+                <div>
+                    <strong>${escapeHtml(story.name)}</strong>
+                    <p>${escapeHtml(story.tag)}</p>
+                </div>
+            </article>
+        `).join("");
+    }
+
+    function renderPeopleSuggestions() {
+        const list = document.getElementById("peopleYouMayKnow");
+        if (!list) return;
+        list.innerHTML = peopleSuggestions.map(person => `
+            <div class="person-row">
+                <div>
+                    <strong>${escapeHtml(person.name)}</strong>
+                    <p>${escapeHtml(person.role)}</p>
+                </div>
+                <button type="button" data-follow-target="${escapeHtml(person.id || person.name)}">Follow</button>
+            </div>
+        `).join("");
+    }
+
+    function renderTrendingTopics() {
+        const ticker = document.getElementById("trendingTicker");
+        if (!ticker) return;
+        ticker.innerHTML = trendingTopics.map(topic => `<span class="trending-pill">${escapeHtml(topic)}</span>`).join("");
+    }
 
     function renderCommunityFeed() {
         const feed = document.getElementById("communityFeed");
@@ -291,12 +339,38 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         feed.innerHTML = communityPosts.map(post => `
-            <article class="feed-post">
-                <h4>${escapeHtml(post.title)}</h4>
-                <p>${escapeHtml(post.body)}</p>
-                ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" alt="Stamp preview for ${escapeHtml(post.title)}">` : ""}
+            <article class="feed-post" data-post-id="${escapeHtml(post.id || post.createdAt || post.title)}">
+                <div class="feed-head">
+                    <div class="feed-author">
+                        <span class="story-avatar">${escapeHtml((post.authorId || "SB").slice(0, 2).toUpperCase())}</span>
+                        <span><strong>${escapeHtml(post.authorId || "stampbook-user")}</strong> · ${escapeHtml(formatDate(post.createdAt || Date.now()))}</span>
+                    </div>
+                </div>
+                <h4>${escapeHtml(post.title || "New stamp update")}</h4>
+                <p>${escapeHtml(post.body || "")}</p>
+                ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" alt="Stamp preview for ${escapeHtml(post.title || "post")}">` : ""}
+                <div class="feed-actions">
+                    <button type="button" data-action="like">Like (${Number(post.reactions?.like || 0)})</button>
+                    <button type="button" data-action="love">Love (${Number(post.reactions?.love || 0)})</button>
+                    <button type="button" data-action="wow">Wow (${Number(post.reactions?.wow || 0)})</button>
+                    <button type="button" data-action="share">Share (${Number(post.shares || 0)})</button>
+                </div>
+                <form class="feed-comment-form" data-action="comment">
+                    <input name="comment" placeholder="Write a comment..." required>
+                    <button type="submit">Comment</button>
+                </form>
+                <div class="feed-comments">
+                    ${(post.comments || []).slice(-3).map(comment => `<div class="comment-item"><strong>${escapeHtml(comment.authorId || "user")}</strong>: ${escapeHtml(comment.text || "")}</div>`).join("")}
+                </div>
             </article>
         `).join("");
+    }
+
+    function getPostByElementTarget(target) {
+        const postEl = target.closest(".feed-post");
+        if (!postEl) return null;
+        const postId = postEl.getAttribute("data-post-id");
+        return communityPosts.find(post => String(post.id || post.createdAt || post.title) === String(postId));
     }
 
     async function loadCommunityPosts() {
@@ -309,6 +383,279 @@ document.addEventListener("DOMContentLoaded", () => {
             renderCommunityFeed();
         } catch {
             renderCommunityFeed();
+        }
+    }
+
+    async function loadSocialBootstrap() {
+        try {
+            const payload = await requestJson("api/social/bootstrap");
+            storyItems = Array.isArray(payload.stories) ? payload.stories : storyItems;
+            peopleSuggestions = Array.isArray(payload.people) ? payload.people : peopleSuggestions;
+            trendingTopics = Array.isArray(payload.trending) ? payload.trending : trendingTopics;
+        } catch {
+            // Keep defaults if bootstrap is unavailable
+        }
+        renderStories();
+        renderPeopleSuggestions();
+        renderTrendingTopics();
+    }
+
+    function getActiveUserId() {
+        return document.getElementById("profileUserName")?.textContent || "stampbook-user";
+    }
+
+    function parseSocialRoute() {
+        const hash = (window.location.hash || "").replace(/^#/, "").trim();
+        if (hash.startsWith("profile/")) {
+            return { view: "profile", value: decodeURIComponent(hash.slice("profile/".length)) };
+        }
+        if (hash.startsWith("group/")) {
+            return { view: "group", value: decodeURIComponent(hash.slice("group/".length)) };
+        }
+        if (hash === "group") {
+            const selected = document.getElementById("groupPostGroupId")?.value || "";
+            return { view: "group", value: selected };
+        }
+        return { view: "feed", value: "" };
+    }
+
+    function setSocialView(viewName) {
+        const feed = document.getElementById("stampbook-social");
+        const profile = document.getElementById("socialProfileView");
+        const group = document.getElementById("socialGroupView");
+        if (!feed || !profile || !group) return;
+
+        feed.hidden = viewName !== "feed";
+        profile.hidden = viewName !== "profile";
+        group.hidden = viewName !== "group";
+    }
+
+    function renderProfileTimeline(profile) {
+        const title = document.getElementById("profileViewTitle");
+        const stats = document.getElementById("profileTimelineStats");
+        const posts = document.getElementById("profileTimelinePosts");
+        if (title) {
+            title.textContent = `Profile: ${profile.userId}`;
+        }
+        if (stats) {
+            stats.innerHTML = `
+                <div class="json-panel">
+                    <pre>${escapeHtml(JSON.stringify(profile.stats || {}, null, 2))}</pre>
+                </div>
+            `;
+        }
+        if (!posts) return;
+        const rows = Array.isArray(profile.latestPosts) ? profile.latestPosts : [];
+        posts.innerHTML = rows.length
+            ? rows.map(post => `
+                <article class="feed-post">
+                    <h4>${escapeHtml(post.title || "Post")}</h4>
+                    <p>${escapeHtml(post.body || "")}</p>
+                    <div class="mini-row"><span>${escapeHtml(formatDate(post.createdAt))}</span></div>
+                </article>
+            `).join("")
+            : '<div class="empty-state">No profile posts yet.</div>';
+    }
+
+    function renderGroupTimeline(group) {
+        const title = document.getElementById("groupViewTitle");
+        const meta = document.getElementById("groupTimelineMeta");
+        const posts = document.getElementById("groupTimelinePosts");
+        if (title) {
+            title.textContent = `Group: ${group.name || group.id}`;
+        }
+        if (meta) {
+            meta.innerHTML = `
+                <div class="feedback success">
+                    <strong>${escapeHtml(group.name || "Group")}</strong>
+                    <span>${escapeHtml(group.about || "")}</span>
+                </div>
+                <div class="mini-row"><span>Members</span><strong>${Number((group.members || []).length)}</strong></div>
+            `;
+        }
+        if (!posts) return;
+        const rows = Array.isArray(group.posts) ? group.posts : [];
+        posts.innerHTML = rows.length
+            ? rows.map(post => `
+                <article class="feed-post">
+                    <h4>${escapeHtml(post.authorId || "member")}</h4>
+                    <p>${escapeHtml(post.body || "")}</p>
+                    <div class="mini-row"><span>${escapeHtml(formatDate(post.createdAt))}</span></div>
+                </article>
+            `).join("")
+            : '<div class="empty-state">No group posts yet.</div>';
+    }
+
+    async function loadProfileTimeline(userId) {
+        if (!userId) {
+            setSocialView("feed");
+            return;
+        }
+        try {
+            const profile = await requestJson(`api/social/profile/${encodeURIComponent(userId)}`);
+            renderProfileTimeline(profile);
+            setSocialView("profile");
+        } catch {
+            setSocialView("feed");
+        }
+    }
+
+    async function loadGroupTimeline(groupId) {
+        if (!groupId) {
+            setSocialView("feed");
+            return;
+        }
+        try {
+            const group = await requestJson(`api/social/groups/${encodeURIComponent(groupId)}`);
+            renderGroupTimeline(group);
+            setSocialView("group");
+        } catch {
+            setSocialView("feed");
+        }
+    }
+
+    async function handleSocialRoute() {
+        const route = parseSocialRoute();
+        if (route.view === "profile") {
+            await loadProfileTimeline(route.value);
+            return;
+        }
+        if (route.view === "group") {
+            await loadGroupTimeline(route.value);
+            return;
+        }
+        setSocialView("feed");
+    }
+
+    function renderFriendsBoard(payload) {
+        const board = document.getElementById("friendsBoard");
+        if (!board) return;
+        const incoming = Array.isArray(payload?.incoming) ? payload.incoming : [];
+        const outgoing = Array.isArray(payload?.outgoing) ? payload.outgoing : [];
+        const friends = Array.isArray(payload?.friends) ? payload.friends : [];
+
+        board.innerHTML = `
+            <div class="mini-row"><strong>Friends</strong><span>${friends.length}</span></div>
+            ${friends.slice(0, 5).map(id => `<div class="mini-row"><span>${escapeHtml(id)}</span></div>`).join("")}
+            ${incoming.length ? incoming.map(req => `
+                <div class="mini-row" data-request-id="${escapeHtml(req.id)}">
+                    <span>${escapeHtml(req.fromUserId)} wants to connect</span>
+                    <span class="mini-actions">
+                        <button type="button" data-request-action="accept">Accept</button>
+                        <button type="button" data-request-action="reject">Reject</button>
+                    </span>
+                </div>
+            `).join("") : ""}
+            ${outgoing.length ? `<div class="mini-row"><span>Pending sent: ${outgoing.length}</span></div>` : ""}
+        `;
+    }
+
+    function renderGroupsList(groups) {
+        const list = document.getElementById("groupsList");
+        const select = document.getElementById("groupPostGroupId");
+        const openGroup = document.getElementById("openGroupViewBtn");
+        if (!list || !select) return;
+
+        const rows = Array.isArray(groups) ? groups : [];
+        list.innerHTML = rows.length
+            ? rows.slice(0, 8).map(group => `
+                <div class="mini-row">
+                    <span><strong>${escapeHtml(group.name)}</strong> (${Number((group.members || []).length)})</span>
+                    <span class="mini-actions">
+                        <a class="mini-link" href="#group/${escapeHtml(group.id)}">Open</a>
+                        <button type="button" data-group-join="${escapeHtml(group.id)}">Join</button>
+                    </span>
+                </div>
+            `).join("")
+            : '<div class="mini-row"><span>No groups yet</span></div>';
+
+        select.innerHTML = rows.length
+            ? rows.map(group => `<option value="${escapeHtml(group.id)}">${escapeHtml(group.name)}</option>`).join("")
+            : '<option value="">No groups</option>';
+
+        if (openGroup && rows.length) {
+            openGroup.setAttribute("href", `#group/${encodeURIComponent(rows[0].id)}`);
+        }
+    }
+
+    function renderNotificationBoard(payload) {
+        const board = document.getElementById("notificationBoard");
+        const badge = document.getElementById("notificationCountBadge");
+        const filterButtons = document.querySelectorAll("#notificationFilters [data-notification-filter]");
+        if (!board || !badge) return;
+
+        const notifications = Array.isArray(payload?.notifications) ? payload.notifications : [];
+        const unread = Number(payload?.unread || 0);
+        badge.textContent = String(unread);
+        badge.hidden = unread <= 0;
+
+        filterButtons.forEach(button => {
+            const selected = button.getAttribute("data-notification-filter") === notificationFilter;
+            button.classList.toggle("active", selected);
+        });
+
+        const filtered = notifications.filter(row => {
+            if (notificationFilter === "unread") {
+                return !row.isRead;
+            }
+            if (notificationFilter === "requests") {
+                return String(row.type || "").includes("friend_request");
+            }
+            return true;
+        });
+
+        board.innerHTML = filtered.length
+            ? filtered.slice(0, 8).map(row => {
+                const meta = row.meta || {};
+                const routeHref = meta.groupId
+                    ? `#group/${encodeURIComponent(meta.groupId)}`
+                    : meta.followerId || meta.fromUserId
+                        ? `#profile/${encodeURIComponent(meta.followerId || meta.fromUserId)}`
+                        : "#stampbook-social";
+                return `
+                <div class="mini-row ${row.isRead ? "" : "unread-notification"}">
+                    <span class="notification-content">
+                        <span>${escapeHtml(row.message || row.type || "Notification")}</span>
+                        <small>${escapeHtml(formatDate(row.createdAt))}</small>
+                    </span>
+                    <span class="mini-actions">
+                        <a class="mini-link" href="${routeHref}">Open</a>
+                        ${row.isRead ? "" : `<button type=\"button\" data-mark-read=\"${escapeHtml(row.id || "") }\">Read</button>`}
+                    </span>
+                </div>
+            `;
+            }).join("")
+            : '<div class="mini-row"><span>No notifications yet</span></div>';
+    }
+
+    async function loadNotifications() {
+        const userId = getActiveUserId();
+        try {
+            const payload = await requestJson(`api/social/notifications/${encodeURIComponent(userId)}?limit=20`);
+            notificationCache = payload;
+            renderNotificationBoard(notificationCache);
+        } catch {
+            notificationCache = { unread: 0, notifications: [] };
+            renderNotificationBoard(notificationCache);
+        }
+    }
+
+    async function loadGroups() {
+        try {
+            const groups = await requestJson("api/social/groups");
+            renderGroupsList(groups);
+        } catch {
+            renderGroupsList([]);
+        }
+    }
+
+    async function loadFriendsBoard() {
+        const userId = getActiveUserId();
+        try {
+            const payload = await requestJson(`api/social/friends/${encodeURIComponent(userId)}`);
+            renderFriendsBoard(payload);
+        } catch {
+            renderFriendsBoard({ incoming: [], outgoing: [], friends: [] });
         }
     }
 
@@ -665,6 +1012,259 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    registerSubmit("stampbookComposerForm", async event => {
+        event.preventDefault();
+        const body = document.getElementById("sbPostText")?.value.trim();
+        const imageUrl = document.getElementById("sbPostImage")?.value.trim();
+        const authorId = document.getElementById("profileUserName")?.textContent || "stampbook-user";
+
+        try {
+            await requestJson("api/community/posts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: "Stampbook post",
+                    body,
+                    imageUrl,
+                    authorId
+                })
+            });
+            await loadCommunityPosts();
+            renderFeedback("stampbookComposerResult", "Published to Stampbook feed.", false);
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("stampbookComposerResult", error.message, true);
+        }
+    });
+
+    document.getElementById("communityFeed")?.addEventListener("click", async event => {
+        const actionBtn = event.target.closest("button[data-action]");
+        if (!actionBtn) return;
+        const action = actionBtn.getAttribute("data-action");
+        const post = getPostByElementTarget(actionBtn);
+        if (!post) return;
+
+        try {
+            if (action === "like" || action === "love" || action === "wow") {
+                await requestJson(`api/community/posts/${encodeURIComponent(post.id)}/react`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ reactionType: action })
+                });
+            } else if (action === "share") {
+                await requestJson(`api/community/posts/${encodeURIComponent(post.id)}/share`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({})
+                });
+                renderFeedback("stampbookComposerResult", "Post shared successfully in Stampbook timeline.", false);
+            }
+            await loadCommunityPosts();
+        } catch (error) {
+            renderFeedback("stampbookComposerResult", error.message, true);
+        }
+    });
+
+    document.getElementById("communityFeed")?.addEventListener("submit", async event => {
+        const form = event.target.closest("form[data-action='comment']");
+        if (!form) return;
+        event.preventDefault();
+        const input = form.querySelector("input[name='comment']");
+        const value = input?.value.trim();
+        if (!value) return;
+        const post = getPostByElementTarget(form);
+        if (!post) return;
+
+        try {
+            await requestJson(`api/community/posts/${encodeURIComponent(post.id)}/comment`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: value,
+                    authorId: document.getElementById("profileUserName")?.textContent || "you"
+                })
+            });
+            await loadCommunityPosts();
+        } catch (error) {
+            renderFeedback("stampbookComposerResult", error.message, true);
+        }
+    });
+
+    document.getElementById("peopleYouMayKnow")?.addEventListener("click", async event => {
+        const followBtn = event.target.closest("button[data-follow-target]");
+        if (!followBtn) return;
+        const targetId = followBtn.getAttribute("data-follow-target");
+        const followerId = getActiveUserId();
+        try {
+            await requestJson("api/social/follow", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ followerId, targetId })
+            });
+            followBtn.textContent = "Following";
+            followBtn.setAttribute("disabled", "disabled");
+            renderFeedback("stampbookComposerResult", `You are now following ${targetId}.`, false);
+        } catch (error) {
+            renderFeedback("stampbookComposerResult", error.message, true);
+        }
+    });
+
+    document.getElementById("friendsBoard")?.addEventListener("click", async event => {
+        const actionBtn = event.target.closest("button[data-request-action]");
+        if (!actionBtn) return;
+        const row = actionBtn.closest("[data-request-id]");
+        const requestId = row?.getAttribute("data-request-id");
+        const actorUserId = document.getElementById("profileUserName")?.textContent || "stampbook-user";
+        if (!requestId) return;
+
+        try {
+            await requestJson("api/social/friends/respond", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ requestId, actorUserId, action: actionBtn.getAttribute("data-request-action") })
+            });
+            await loadFriendsBoard();
+        } catch (error) {
+            renderFeedback("friendRequestResult", error.message, true);
+        }
+    });
+
+    document.getElementById("groupsList")?.addEventListener("click", async event => {
+        const joinBtn = event.target.closest("button[data-group-join]");
+        if (!joinBtn) return;
+        const groupId = joinBtn.getAttribute("data-group-join");
+        const userId = document.getElementById("profileUserName")?.textContent || "stampbook-user";
+        try {
+            await requestJson(`api/social/groups/${encodeURIComponent(groupId)}/join`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId })
+            });
+            await loadGroups();
+            renderFeedback("groupCreateResult", "Joined group successfully.", false);
+        } catch (error) {
+            renderFeedback("groupCreateResult", error.message, true);
+        }
+    });
+
+    registerSubmit("profileLookupForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("profileLookupUserId")?.value.trim();
+        try {
+            const profile = await requestJson(`api/social/profile/${encodeURIComponent(userId)}`);
+            renderJson("profileLookupResult", profile, "Profile snapshot");
+            window.location.hash = `#profile/${encodeURIComponent(userId)}`;
+        } catch (error) {
+            renderFeedback("profileLookupResult", error.message, true);
+        }
+    });
+
+    registerSubmit("friendRequestForm", async event => {
+        event.preventDefault();
+        const fromUserId = getActiveUserId();
+        const toUserId = document.getElementById("friendTargetUserId")?.value.trim();
+        try {
+            await requestJson("api/social/friends/request", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fromUserId, toUserId })
+            });
+            renderFeedback("friendRequestResult", "Friend request sent.", false);
+            event.target.reset();
+            await loadFriendsBoard();
+        } catch (error) {
+            renderFeedback("friendRequestResult", error.message, true);
+        }
+    });
+
+    registerSubmit("groupCreateForm", async event => {
+        event.preventDefault();
+        const name = document.getElementById("groupNameInput")?.value.trim();
+        const about = document.getElementById("groupAboutInput")?.value.trim();
+        const creatorId = getActiveUserId();
+        try {
+            await requestJson("api/social/groups", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, about, creatorId })
+            });
+            renderFeedback("groupCreateResult", "Group created successfully.", false);
+            event.target.reset();
+            await loadGroups();
+        } catch (error) {
+            renderFeedback("groupCreateResult", error.message, true);
+        }
+    });
+
+    registerSubmit("groupPostForm", async event => {
+        event.preventDefault();
+        const groupId = document.getElementById("groupPostGroupId")?.value;
+        const body = document.getElementById("groupPostBody")?.value.trim();
+        const authorId = getActiveUserId();
+        try {
+            await requestJson(`api/social/groups/${encodeURIComponent(groupId)}/posts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ authorId, body })
+            });
+            renderFeedback("groupPostResult", "Posted to group.", false);
+            event.target.reset();
+            if (groupId) {
+                window.location.hash = `#group/${encodeURIComponent(groupId)}`;
+            }
+            await loadNotifications();
+        } catch (error) {
+            renderFeedback("groupPostResult", error.message, true);
+        }
+    });
+
+    document.getElementById("markNotificationsReadBtn")?.addEventListener("click", async () => {
+        try {
+            await requestJson("api/social/notifications/read", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: getActiveUserId() })
+            });
+            await loadNotifications();
+        } catch (error) {
+            renderFeedback("stampbookComposerResult", error.message, true);
+        }
+    });
+
+    document.getElementById("notificationFilters")?.addEventListener("click", event => {
+        const button = event.target.closest("[data-notification-filter]");
+        if (!button) return;
+        notificationFilter = button.getAttribute("data-notification-filter") || "all";
+        renderNotificationBoard(notificationCache);
+    });
+
+    document.getElementById("notificationBoard")?.addEventListener("click", async event => {
+        const markBtn = event.target.closest("button[data-mark-read]");
+        if (!markBtn) return;
+        const notificationId = markBtn.getAttribute("data-mark-read");
+        if (!notificationId) return;
+
+        try {
+            await requestJson("api/social/notifications/read", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: getActiveUserId(), notificationIds: [notificationId] })
+            });
+            await loadNotifications();
+        } catch (error) {
+            renderFeedback("stampbookComposerResult", error.message, true);
+        }
+    });
+
+    document.getElementById("openProfileViewBtn")?.addEventListener("click", event => {
+        const current = document.getElementById("profileLookupUserId")?.value.trim() || getActiveUserId();
+        event.currentTarget.setAttribute("href", `#profile/${encodeURIComponent(current)}`);
+    });
+
+    window.addEventListener("hashchange", () => {
+        handleSocialRoute();
+    });
+
     registerSubmit("mintJpgForm", async event => {
         event.preventDefault();
         const ownerId = document.getElementById("mintOwnerId")?.value.trim();
@@ -929,10 +1529,19 @@ document.addEventListener("DOMContentLoaded", () => {
         event.target.reset();
     });
 
+    loadSocialBootstrap();
     loadCommunityPosts();
+    loadGroups();
+    loadFriendsBoard();
+    loadNotifications();
+    handleSocialRoute();
 
     refreshHeroMetrics();
     loadListings();
     loadHealth();
     loadTokenDist();
+
+    window.setInterval(() => {
+        loadNotifications();
+    }, 30000);
 });

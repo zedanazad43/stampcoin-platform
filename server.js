@@ -25,10 +25,16 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-const DATA_FILE = path.join(__dirname, "data.json");
-const COMMUNITY_FILE = path.join(__dirname, "community-posts.json");
-const NFT_DRAFTS_FILE = path.join(__dirname, "nft-drafts.json");
-const P2P_LISTINGS_FILE = path.join(__dirname, "p2p-listings.json");
+const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, "data.json");
+const COMMUNITY_FILE = process.env.COMMUNITY_FILE || path.join(__dirname, "community-posts.json");
+const SOCIAL_BOOTSTRAP_FILE = process.env.SOCIAL_BOOTSTRAP_FILE || path.join(__dirname, "social-bootstrap.json");
+const SOCIAL_FOLLOWS_FILE = process.env.SOCIAL_FOLLOWS_FILE || path.join(__dirname, "social-follows.json");
+const SOCIAL_GROUPS_FILE = process.env.SOCIAL_GROUPS_FILE || path.join(__dirname, "social-groups.json");
+const SOCIAL_FRIEND_REQUESTS_FILE = process.env.SOCIAL_FRIEND_REQUESTS_FILE || path.join(__dirname, "social-friend-requests.json");
+const SOCIAL_FRIENDS_FILE = process.env.SOCIAL_FRIENDS_FILE || path.join(__dirname, "social-friends.json");
+const SOCIAL_NOTIFICATIONS_FILE = process.env.SOCIAL_NOTIFICATIONS_FILE || path.join(__dirname, "social-notifications.json");
+const NFT_DRAFTS_FILE = process.env.NFT_DRAFTS_FILE || path.join(__dirname, "nft-drafts.json");
+const P2P_LISTINGS_FILE = process.env.P2P_LISTINGS_FILE || path.join(__dirname, "p2p-listings.json");
 const UPLOAD_DIR = path.join(__dirname, "public", "uploads");
 const SYNC_TOKEN = process.env.SYNC_TOKEN || "";
 
@@ -71,7 +77,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    service: "Stampcoin Platform",
+    service: "Stampbook",
     version: "2.0.0"
   });
 });
@@ -82,9 +88,9 @@ app.get("/api/status", (req, res) => {
 
 app.get("/api/info", (req, res) => {
   res.json({
-    name: "Stampcoin Platform",
+    name: "Stampbook",
     version: "2.0.0",
-    description: "Blockchain-powered digital stamps, wallet and marketplace",
+    description: "Social collectibles network with wallet, NFT, and marketplace",
     endpoints: {
       wallet: "/api/wallet",
       market: "/api/market",
@@ -373,11 +379,69 @@ async function writeJsonArray(filePath, rows) {
   await fs.writeFile(filePath, JSON.stringify(rows, null, 2), "utf8");
 }
 
+async function addSocialNotification(userId, type, message, meta = {}) {
+  if (!userId || !type || !message) {
+    return;
+  }
+
+  const notifications = await readJsonArray(SOCIAL_NOTIFICATIONS_FILE);
+  notifications.push({
+    id: `ntf_${Date.now()}_${Math.floor(Math.random() * 1e6)}`,
+    userId,
+    type,
+    message,
+    meta,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  });
+
+  if (notifications.length > 800) {
+    notifications.splice(0, notifications.length - 800);
+  }
+
+  await writeJsonArray(SOCIAL_NOTIFICATIONS_FILE, notifications);
+}
+
+function normalizeCommunityPost(post) {
+  const reactions = post && typeof post.reactions === "object" && post.reactions
+    ? post.reactions
+    : { like: 0, love: 0, wow: 0 };
+  const comments = Array.isArray(post && post.comments) ? post.comments : [];
+  return {
+    ...post,
+    reactions: {
+      like: Number(reactions.like || 0),
+      love: Number(reactions.love || 0),
+      wow: Number(reactions.wow || 0)
+    },
+    shares: Number((post && post.shares) || 0),
+    comments
+  };
+}
+
+function getDefaultSocialBootstrap() {
+  return {
+    stories: [
+      { id: "st_1", name: "Lina", tag: "New Ottoman Set" },
+      { id: "st_2", name: "Mazin", tag: "Auction Tonight" },
+      { id: "st_3", name: "Rama", tag: "NFT Drop" },
+      { id: "st_4", name: "Yousef", tag: "Rare Cover" }
+    ],
+    people: [
+      { id: "u_1", name: "Nora Al Collector", role: "Classic Stamps" },
+      { id: "u_2", name: "Kareem Chain", role: "NFT Curator" },
+      { id: "u_3", name: "Sahar Philately", role: "Postal Historian" }
+    ],
+    trending: ["#Stampbook", "#RareStamp", "#NFTPhilately", "#P2PEscrow", "#STP"]
+  };
+}
+
 // === Community Hub API ===
 app.get("/api/community/posts", async (_req, res) => {
   try {
     const posts = await readJsonArray(COMMUNITY_FILE);
-    res.json(posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    const normalized = posts.map(normalizeCommunityPost);
+    res.json(normalized.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -396,11 +460,499 @@ app.post("/api/community/posts", async (req, res) => {
       body,
       imageUrl: imageUrl || "",
       authorId: authorId || "anonymous",
+      reactions: { like: 0, love: 0, wow: 0 },
+      shares: 0,
+      comments: [],
       createdAt: new Date().toISOString()
     };
     posts.push(post);
     await writeJsonArray(COMMUNITY_FILE, posts);
     res.json(post);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/social/bootstrap", async (_req, res) => {
+  try {
+    const rows = await readJsonArray(SOCIAL_BOOTSTRAP_FILE);
+    if (!rows.length) {
+      return res.json(getDefaultSocialBootstrap());
+    }
+    const first = rows[0] || {};
+    res.json({
+      stories: Array.isArray(first.stories) ? first.stories : [],
+      people: Array.isArray(first.people) ? first.people : [],
+      trending: Array.isArray(first.trending) ? first.trending : []
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/community/posts/:postId/react", async (req, res) => {
+  try {
+    const reactionType = (req.body && req.body.reactionType) || "like";
+    const allowed = ["like", "love", "wow"];
+    if (!allowed.includes(reactionType)) {
+      return res.status(400).json({ error: "reactionType must be one of like, love, wow" });
+    }
+
+    const posts = await readJsonArray(COMMUNITY_FILE);
+    const postIdx = posts.findIndex(post => post.id === req.params.postId);
+    if (postIdx === -1) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const post = normalizeCommunityPost(posts[postIdx]);
+    post.reactions[reactionType] += 1;
+    posts[postIdx] = post;
+    await writeJsonArray(COMMUNITY_FILE, posts);
+    if (post.authorId && post.authorId !== (req.body && req.body.actorUserId)) {
+      await addSocialNotification(
+        post.authorId,
+        "post_reaction",
+        `Your post received a ${reactionType} reaction.`,
+        { postId: post.id, reactionType }
+      );
+    }
+    res.json(post);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/community/posts/:postId/comment", async (req, res) => {
+  try {
+    const { text, authorId } = req.body || {};
+    if (!text) {
+      return res.status(400).json({ error: "text is required" });
+    }
+
+    const posts = await readJsonArray(COMMUNITY_FILE);
+    const postIdx = posts.findIndex(post => post.id === req.params.postId);
+    if (postIdx === -1) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const post = normalizeCommunityPost(posts[postIdx]);
+    post.comments.push({
+      id: `c_${Date.now()}`,
+      authorId: authorId || "anonymous",
+      text,
+      createdAt: new Date().toISOString()
+    });
+    if (post.comments.length > 60) {
+      post.comments = post.comments.slice(post.comments.length - 60);
+    }
+
+    posts[postIdx] = post;
+    await writeJsonArray(COMMUNITY_FILE, posts);
+    if (post.authorId && post.authorId !== (authorId || "anonymous")) {
+      await addSocialNotification(
+        post.authorId,
+        "post_comment",
+        `${authorId || "A collector"} commented on your post.`,
+        { postId: post.id }
+      );
+    }
+    res.json(post);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/community/posts/:postId/share", async (req, res) => {
+  try {
+    const posts = await readJsonArray(COMMUNITY_FILE);
+    const postIdx = posts.findIndex(post => post.id === req.params.postId);
+    if (postIdx === -1) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const post = normalizeCommunityPost(posts[postIdx]);
+    post.shares += 1;
+    posts[postIdx] = post;
+    await writeJsonArray(COMMUNITY_FILE, posts);
+    if (post.authorId) {
+      await addSocialNotification(
+        post.authorId,
+        "post_share",
+        "Your post was shared in the community timeline.",
+        { postId: post.id }
+      );
+    }
+    res.json(post);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/follow", async (req, res) => {
+  try {
+    const { followerId, targetId } = req.body || {};
+    if (!followerId || !targetId) {
+      return res.status(400).json({ error: "followerId and targetId are required" });
+    }
+    if (followerId === targetId) {
+      return res.status(400).json({ error: "You cannot follow yourself" });
+    }
+
+    const rows = await readJsonArray(SOCIAL_FOLLOWS_FILE);
+    const exists = rows.some(row => row.followerId === followerId && row.targetId === targetId);
+    if (!exists) {
+      rows.push({
+        id: `follow_${Date.now()}`,
+        followerId,
+        targetId,
+        createdAt: new Date().toISOString()
+      });
+      await writeJsonArray(SOCIAL_FOLLOWS_FILE, rows);
+      await addSocialNotification(
+        targetId,
+        "new_follower",
+        `${followerId} started following you.`,
+        { followerId }
+      );
+    }
+    res.json({ ok: true, followerId, targetId, following: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/social/following/:userId", async (req, res) => {
+  try {
+    const rows = await readJsonArray(SOCIAL_FOLLOWS_FILE);
+    const targets = rows
+      .filter(row => row.followerId === req.params.userId)
+      .map(row => row.targetId);
+    res.json({ userId: req.params.userId, following: targets });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/social/profile/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const posts = (await readJsonArray(COMMUNITY_FILE)).map(normalizeCommunityPost);
+    const follows = await readJsonArray(SOCIAL_FOLLOWS_FILE);
+    const friends = await readJsonArray(SOCIAL_FRIENDS_FILE);
+    const groups = await readJsonArray(SOCIAL_GROUPS_FILE);
+
+    const postsByUser = posts.filter(post => post.authorId === userId);
+    const followers = follows.filter(row => row.targetId === userId).length;
+    const following = follows.filter(row => row.followerId === userId).length;
+    const friendsCount = friends.filter(row => row.userA === userId || row.userB === userId).length;
+    const groupsCount = groups.filter(group => Array.isArray(group.members) && group.members.includes(userId)).length;
+    const totalReactions = postsByUser.reduce((sum, post) => {
+      return sum + Number(post.reactions.like || 0) + Number(post.reactions.love || 0) + Number(post.reactions.wow || 0);
+    }, 0);
+
+    res.json({
+      userId,
+      stats: {
+        posts: postsByUser.length,
+        followers,
+        following,
+        friends: friendsCount,
+        groups: groupsCount,
+        totalReactions
+      },
+      latestPosts: postsByUser
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/social/groups", async (_req, res) => {
+  try {
+    const groups = await readJsonArray(SOCIAL_GROUPS_FILE);
+    res.json(groups.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/social/groups/:groupId", async (req, res) => {
+  try {
+    const groups = await readJsonArray(SOCIAL_GROUPS_FILE);
+    const group = groups.find(row => row.id === req.params.groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+    group.posts = Array.isArray(group.posts) ? group.posts : [];
+    group.members = Array.isArray(group.members) ? group.members : [];
+    group.posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(group);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/groups", async (req, res) => {
+  try {
+    const { name, about, creatorId } = req.body || {};
+    if (!name || !about || !creatorId) {
+      return res.status(400).json({ error: "name, about, and creatorId are required" });
+    }
+
+    const groups = await readJsonArray(SOCIAL_GROUPS_FILE);
+    const group = {
+      id: `grp_${Date.now()}`,
+      name,
+      about,
+      creatorId,
+      members: [creatorId],
+      posts: [],
+      createdAt: new Date().toISOString()
+    };
+    groups.push(group);
+    await writeJsonArray(SOCIAL_GROUPS_FILE, groups);
+    res.json(group);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/groups/:groupId/join", async (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+    const groups = await readJsonArray(SOCIAL_GROUPS_FILE);
+    const idx = groups.findIndex(group => group.id === req.params.groupId);
+    if (idx === -1) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const group = groups[idx];
+    group.members = Array.isArray(group.members) ? group.members : [];
+    if (!group.members.includes(userId)) {
+      group.members.push(userId);
+      await addSocialNotification(
+        group.creatorId,
+        "group_member_joined",
+        `${userId} joined ${group.name}.`,
+        { groupId: group.id, userId }
+      );
+    }
+    groups[idx] = group;
+    await writeJsonArray(SOCIAL_GROUPS_FILE, groups);
+    res.json(group);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/groups/:groupId/posts", async (req, res) => {
+  try {
+    const { authorId, body } = req.body || {};
+    if (!authorId || !body) {
+      return res.status(400).json({ error: "authorId and body are required" });
+    }
+
+    const groups = await readJsonArray(SOCIAL_GROUPS_FILE);
+    const idx = groups.findIndex(group => group.id === req.params.groupId);
+    if (idx === -1) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const group = groups[idx];
+    group.posts = Array.isArray(group.posts) ? group.posts : [];
+    group.posts.push({
+      id: `gp_${Date.now()}`,
+      authorId,
+      body,
+      createdAt: new Date().toISOString()
+    });
+    groups[idx] = group;
+    await writeJsonArray(SOCIAL_GROUPS_FILE, groups);
+    const memberTargets = (group.members || []).filter(memberId => memberId !== authorId);
+    await Promise.all(memberTargets.map(memberId =>
+      addSocialNotification(
+        memberId,
+        "group_post",
+        `${authorId} posted in ${group.name}.`,
+        { groupId: group.id }
+      )
+    ));
+    res.json(group.posts[group.posts.length - 1]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/friends/request", async (req, res) => {
+  try {
+    const { fromUserId, toUserId } = req.body || {};
+    if (!fromUserId || !toUserId) {
+      return res.status(400).json({ error: "fromUserId and toUserId are required" });
+    }
+    if (fromUserId === toUserId) {
+      return res.status(400).json({ error: "Cannot send request to yourself" });
+    }
+
+    const requests = await readJsonArray(SOCIAL_FRIEND_REQUESTS_FILE);
+    const friends = await readJsonArray(SOCIAL_FRIENDS_FILE);
+
+    const alreadyFriends = friends.some(row =>
+      (row.userA === fromUserId && row.userB === toUserId) ||
+      (row.userA === toUserId && row.userB === fromUserId)
+    );
+    if (alreadyFriends) {
+      return res.status(409).json({ error: "Users are already friends" });
+    }
+
+    const duplicate = requests.find(row =>
+      row.status === "pending" && (
+        (row.fromUserId === fromUserId && row.toUserId === toUserId) ||
+        (row.fromUserId === toUserId && row.toUserId === fromUserId)
+      )
+    );
+    if (duplicate) {
+      return res.status(409).json({ error: "A pending request already exists" });
+    }
+
+    const requestRow = {
+      id: `fr_${Date.now()}`,
+      fromUserId,
+      toUserId,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      respondedAt: null
+    };
+    requests.push(requestRow);
+    await writeJsonArray(SOCIAL_FRIEND_REQUESTS_FILE, requests);
+    await addSocialNotification(
+      toUserId,
+      "friend_request",
+      `${fromUserId} sent you a friend request.`,
+      { requestId: requestRow.id, fromUserId }
+    );
+    res.json(requestRow);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/friends/respond", async (req, res) => {
+  try {
+    const { requestId, actorUserId, action } = req.body || {};
+    if (!requestId || !actorUserId || !action) {
+      return res.status(400).json({ error: "requestId, actorUserId, and action are required" });
+    }
+    if (!["accept", "reject"].includes(action)) {
+      return res.status(400).json({ error: "action must be accept or reject" });
+    }
+
+    const requests = await readJsonArray(SOCIAL_FRIEND_REQUESTS_FILE);
+    const idx = requests.findIndex(row => row.id === requestId && row.status === "pending");
+    if (idx === -1) {
+      return res.status(404).json({ error: "Pending request not found" });
+    }
+
+    const row = requests[idx];
+    if (row.toUserId !== actorUserId) {
+      return res.status(403).json({ error: "Only target user can respond" });
+    }
+
+    row.status = action === "accept" ? "accepted" : "rejected";
+    row.respondedAt = new Date().toISOString();
+    requests[idx] = row;
+    await writeJsonArray(SOCIAL_FRIEND_REQUESTS_FILE, requests);
+
+    if (action === "accept") {
+      const friends = await readJsonArray(SOCIAL_FRIENDS_FILE);
+      const userA = [row.fromUserId, row.toUserId].sort()[0];
+      const userB = [row.fromUserId, row.toUserId].sort()[1];
+      const exists = friends.some(item => item.userA === userA && item.userB === userB);
+      if (!exists) {
+        friends.push({ id: `f_${Date.now()}`, userA, userB, createdAt: new Date().toISOString() });
+        await writeJsonArray(SOCIAL_FRIENDS_FILE, friends);
+      }
+    }
+
+    await addSocialNotification(
+      row.fromUserId,
+      "friend_request_response",
+      `${actorUserId} ${action === "accept" ? "accepted" : "rejected"} your friend request.`,
+      { requestId: row.id, action }
+    );
+
+    res.json(row);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/social/friends/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const requests = await readJsonArray(SOCIAL_FRIEND_REQUESTS_FILE);
+    const friends = await readJsonArray(SOCIAL_FRIENDS_FILE);
+
+    const incoming = requests.filter(row => row.toUserId === userId && row.status === "pending");
+    const outgoing = requests.filter(row => row.fromUserId === userId && row.status === "pending");
+    const connected = friends
+      .filter(row => row.userA === userId || row.userB === userId)
+      .map(row => (row.userA === userId ? row.userB : row.userA));
+
+    res.json({ userId, incoming, outgoing, friends: connected });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/social/notifications/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const limit = Number(req.query.limit || 20);
+    const notifications = await readJsonArray(SOCIAL_NOTIFICATIONS_FILE);
+    const userNotifications = notifications
+      .filter(row => row.userId === userId)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : 20;
+    const rows = userNotifications.slice(0, safeLimit);
+    const unread = userNotifications.filter(row => !row.isRead).length;
+    res.json({ userId, unread, notifications: rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/notifications/read", async (req, res) => {
+  try {
+    const { userId, notificationIds } = req.body || {};
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    const notifications = await readJsonArray(SOCIAL_NOTIFICATIONS_FILE);
+    const targetIds = Array.isArray(notificationIds) ? new Set(notificationIds) : null;
+    let marked = 0;
+
+    for (const row of notifications) {
+      if (row.userId !== userId) {
+        continue;
+      }
+      if (targetIds && !targetIds.has(row.id)) {
+        continue;
+      }
+      if (!row.isRead) {
+        row.isRead = true;
+        marked += 1;
+      }
+    }
+
+    await writeJsonArray(SOCIAL_NOTIFICATIONS_FILE, notifications);
+    res.json({ ok: true, userId, marked });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -551,9 +1103,23 @@ app.get("*", (req, res) => {
 });
 
 // === Start Server ===
-const port = process.env.PORT || 8080;
-app.listen(port, '0.0.0.0', () => {
-  console.log(`✓ Stampcoin Platform server running on port ${port}`);
-  console.log(`✓ API docs available at: http://localhost:${port}/api/info`);
-  console.log(`✓ Health check: http://localhost:${port}/health`);
-});
+function startServer(port = process.env.PORT || 8080) {
+  const server = app.listen(port, "0.0.0.0", () => {
+    const resolvedPort = server.address() && typeof server.address() === "object"
+      ? server.address().port
+      : port;
+    console.log(`✓ Stampbook server running on port ${resolvedPort}`);
+    console.log(`✓ API docs available at: http://localhost:${resolvedPort}/api/info`);
+    console.log(`✓ Health check: http://localhost:${resolvedPort}/health`);
+  });
+  return server;
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = {
+  app,
+  startServer
+};

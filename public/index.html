@@ -1,38 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stampcoin (STP) | Digital Collectibles Marketplace &amp; Blockchain Platform</title>
-    <meta name="description" content="Stampcoin (STP) is a live digital collectibles marketplace and blockchain platform. Trade stamps, collectibles, and limited-edition assets with real on-chain settlement and wallet infrastructure.">
+    <title>Stampbook (STP) | Social Collectibles Network</title>
+    <meta name="description" content="Stampbook (STP) is a social network for collectors with live wallet infrastructure, NFT minting, P2P escrow, and on-chain settlement.">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <link rel="canonical" href="https://stampcoin-platform.fly.dev/">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://stampcoin-platform.fly.dev/">
-    <meta property="og:title" content="Stampcoin (STP) | Digital Collectibles Marketplace">
-    <meta property="og:description" content="A professional marketplace for digital stamps, collectibles, and limited-edition assets. Live wallets, real token economics, and blockchain settlement — deployed and demo-ready.">
+    <meta property="og:title" content="Stampbook (STP) | Social Collectibles Network">
+    <meta property="og:description" content="A Facebook-like social layer for collectors: stories, feed, groups, wallets, NFTs, and P2P escrow in one live platform.">
     <meta property="og:image" content="https://stampcoin-platform.fly.dev/og-cover.png">
-    <meta property="og:image:alt" content="Stampcoin Platform live blockchain marketplace dashboard">
-    <meta property="og:site_name" content="Stampcoin Platform">
+    <meta property="og:image:alt" content="Stampbook social collectibles dashboard">
+    <meta property="og:site_name" content="Stampbook">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Stampcoin (STP) | Digital Collectibles Marketplace">
-    <meta name="twitter:description" content="Live blockchain marketplace for digital stamps and collectibles. Real wallets, token economics, and on-chain settlement.">
+    <meta name="twitter:title" content="Stampbook (STP) | Social Collectibles Network">
+    <meta name="twitter:description" content="Stories, feed, creator profiles, NFTs, and tokenized trading for collectors.">
     <meta name="twitter:image" content="https://stampcoin-platform.fly.dev/og-cover.png">
-    <meta name="twitter:image:alt" content="Stampcoin Platform live blockchain marketplace dashboard">
+    <meta name="twitter:image:alt" content="Stampbook social collectibles dashboard">
 
     <!-- Structured Data: Organization -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "Stampcoin Platform",
+        "name": "Stampbook",
         "url": "https://stampcoin-platform.fly.dev/",
         "description": "Digital collectibles marketplace and blockchain infrastructure for trading stamps, collectibles, and limited-edition digital assets.",
-        "email": "stampcoin.contact@gmail.com",
+        "email": "stampbook.contact@gmail.com",
         "sameAs": [
             "https://github.com/zedanazad43/stp",
             "https://github.com/zedanazad43/stampcoin-platform"
@@ -44,7 +44,7 @@
     {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "Stampcoin Platform",
+        "name": "Stampbook",
         "url": "https://stampcoin-platform.fly.dev/",
         "description": "Live blockchain marketplace for digital stamps, collectibles, wallets, and token infrastructure."
     }
@@ -60,13 +60,14 @@
     <div class="site-shell">
         <header class="topbar">
             <a class="brand" href="#hero">
-                <span class="brand-mark">SC</span>
+                <span class="brand-mark">SB</span>
                 <span class="brand-copy">
-                    <strong>Stampcoin Platform</strong>
-                    <small>Digital collectibles exchange</small>
+                    <strong>Stampbook</strong>
+                    <small>Social collectibles network</small>
                 </span>
             </a>
             <nav class="topnav">
+                <a href="#stampbook-social">Stampbook Feed</a>
                 <a href="#marketplace">Marketplace</a>
                 <a href="#wallet-lab">Wallet Lab</a>
                 <a href="#token-hub">Token Hub</a>
@@ -77,6 +78,10 @@
                 <a href="#admin-panel">Admin</a>
             </nav>
             <div class="topbar-actions">
+                <a class="topbar-icon" href="#social-notifications" title="Notifications" aria-label="Notifications">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge" id="notificationCountBadge">0</span>
+                </a>
                 <details class="user-dropdown" id="userDropdown">
                     <summary>
                         <span class="user-avatar">AZ</span>
@@ -109,12 +114,11 @@
         <main>
             <section class="hero" id="hero">
                 <div class="hero-copy">
-                    <p class="eyebrow">Production blockchain marketplace</p>
-                    <h1>Trade digital stamps&nbsp;&amp; collectibles on live on-chain infrastructure.</h1>
+                    <p class="eyebrow">Stampbook social + blockchain stack</p>
+                    <h1>انشر وشارك وتداول المقتنيات الرقمية في شبكة اجتماعية متكاملة.</h1>
                     <p class="hero-text">
-                        Stampcoin (STP) delivers professional-grade marketplace infrastructure for digital
-                        collectible trading — live wallets, real token economics, on-chain settlement, and
-                        a fully-wired API deployed on Fly.io and ready for investor demonstration.
+                        Stampbook يجمع تجربة فيسبوك الاجتماعية مع ميزات Web3 السابقة: قصص يومية، منشورات مجتمع،
+                        ملفات شخصية لهواة الطوابع، مع محافظ رقمية، سك NFT، تداول، وتسوية on-chain على نفس المنصة.
                     </p>
                     <div class="hero-actions">
                         <a class="button button-primary" href="#marketplace">Browse Live Listings</a>
@@ -154,6 +158,153 @@
                             <small>runtime build</small>
                         </article>
                     </div>
+                </div>
+            </section>
+
+            <section class="section" id="stampbook-social">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Stampbook Social</p>
+                        <h2>تجربة اجتماعية شبيهة فيس بوك لهواة الطوابع والمقتنيات</h2>
+                    </div>
+                </div>
+                <div class="stampbook-layout">
+                    <aside class="stampbook-side">
+                        <article class="studio-card compact-card">
+                            <h3>Stories</h3>
+                            <div class="story-rail" id="storyRail"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Trending</h3>
+                            <div class="trending-ticker" id="trendingTicker"></div>
+                        </article>
+                    </aside>
+
+                    <section class="stampbook-main">
+                        <article class="studio-card post-composer-card">
+                            <h3>Create Post</h3>
+                            <form id="stampbookComposerForm" class="stack-form">
+                                <label>
+                                    <span>What's new in your collection?</span>
+                                    <textarea id="sbPostText" rows="3" placeholder="Share stamp insights, listing updates, or collector stories..." required></textarea>
+                                </label>
+                                <label>
+                                    <span>Optional image URL</span>
+                                    <input id="sbPostImage" placeholder="https://.../collection.jpg">
+                                </label>
+                                <button class="button button-primary" type="submit">Publish to Stampbook</button>
+                            </form>
+                            <div class="result-panel" id="stampbookComposerResult"></div>
+                        </article>
+
+                        <article class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Stampbook Feed</h3>
+                                <span class="mini-label">Live community timeline</span>
+                            </div>
+                            <div class="community-feed" id="communityFeed"></div>
+                        </article>
+                    </section>
+
+                    <aside class="stampbook-side right">
+                        <article class="studio-card compact-card">
+                            <h3>People You May Know</h3>
+                            <div id="peopleYouMayKnow" class="people-list"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Profile Snapshot</h3>
+                            <form id="profileLookupForm" class="stack-form">
+                                <label>
+                                    <span>User ID</span>
+                                    <input id="profileLookupUserId" placeholder="collector-pro" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Load Profile</button>
+                            </form>
+                            <a class="button button-ghost compact-button" id="openProfileViewBtn" href="#profile/collector-pro">Open Profile Timeline</a>
+                            <div class="result-panel" id="profileLookupResult"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Friend Requests</h3>
+                            <form id="friendRequestForm" class="stack-form">
+                                <label>
+                                    <span>Target User ID</span>
+                                    <input id="friendTargetUserId" placeholder="collector-77" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Send Request</button>
+                            </form>
+                            <div class="result-panel" id="friendRequestResult"></div>
+                            <div class="social-mini-list" id="friendsBoard"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Collector Groups</h3>
+                            <form id="groupCreateForm" class="stack-form">
+                                <label>
+                                    <span>Group Name</span>
+                                    <input id="groupNameInput" placeholder="Arab Stamp Collectors" required>
+                                </label>
+                                <label>
+                                    <span>About</span>
+                                    <input id="groupAboutInput" placeholder="Focused on historical postal collectibles" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Create Group</button>
+                            </form>
+                            <div class="result-panel" id="groupCreateResult"></div>
+                            <div class="social-mini-list" id="groupsList"></div>
+                            <a class="button button-ghost compact-button" id="openGroupViewBtn" href="#group">Open Group Timeline</a>
+                            <form id="groupPostForm" class="stack-form">
+                                <label>
+                                    <span>Group</span>
+                                    <select id="groupPostGroupId" required></select>
+                                </label>
+                                <label>
+                                    <span>Group Post</span>
+                                    <input id="groupPostBody" placeholder="New showcase drop this Friday" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Post to Group</button>
+                            </form>
+                            <div class="result-panel" id="groupPostResult"></div>
+                        </article>
+                        <article class="studio-card compact-card" id="social-notifications">
+                            <div class="card-header-row">
+                                <h3>Notifications</h3>
+                                <button class="button button-ghost compact-button" id="markNotificationsReadBtn" type="button">Mark all read</button>
+                            </div>
+                            <div class="mini-actions" id="notificationFilters">
+                                <button type="button" class="active" data-notification-filter="all">All</button>
+                                <button type="button" data-notification-filter="unread">Unread</button>
+                                <button type="button" data-notification-filter="requests">Requests</button>
+                            </div>
+                            <div class="social-mini-list" id="notificationBoard"></div>
+                        </article>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="section social-detail-view" id="socialProfileView" hidden>
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Profile Timeline</p>
+                        <h2 id="profileViewTitle">Profile</h2>
+                    </div>
+                    <a class="button button-secondary" href="#stampbook-social">Back to Feed</a>
+                </div>
+                <div class="studio-card">
+                    <div class="result-panel" id="profileTimelineStats"></div>
+                    <div class="community-feed" id="profileTimelinePosts"></div>
+                </div>
+            </section>
+
+            <section class="section social-detail-view" id="socialGroupView" hidden>
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Group Timeline</p>
+                        <h2 id="groupViewTitle">Group</h2>
+                    </div>
+                    <a class="button button-secondary" href="#stampbook-social">Back to Feed</a>
+                </div>
+                <div class="studio-card">
+                    <div class="result-panel" id="groupTimelineMeta"></div>
+                    <div class="community-feed" id="groupTimelinePosts"></div>
                 </div>
             </section>
 
@@ -197,7 +348,7 @@
                         <div class="stc-icon" aria-hidden="true">
                             <i class="fa-solid fa-stamp"></i>
                         </div>
-                        <h3>StampCoin (STC/STP)</h3>
+                        <h3>Stampbook Coin (STC/STP)</h3>
                         <p>Utility + settlement token for stamp trading, NFT minting fees, creator rewards, and marketplace operations.</p>
                         <div class="chip-row">
                             <span class="json-chip">Symbol: STC</span>
@@ -506,7 +657,7 @@
                     <section class="studio-card quote-card">
                         <p class="eyebrow">Investor positioning</p>
                         <blockquote>
-                            Stampcoin delivers real on-chain infrastructure for the digital collectibles
+                            Stampbook delivers real on-chain infrastructure for the digital collectibles
                             vertical — not a prototype, but a live exchange platform with token economics,
                             wallet primitives, and a production-grade API already running and deployable
                             in minutes.
@@ -548,10 +699,10 @@
 
                     <section class="studio-card">
                         <div class="card-header-row">
-                            <h3>Community feed</h3>
-                            <span class="mini-label">Latest posts</span>
+                            <h3>Creator Studio</h3>
+                            <span class="mini-label">Long-form publishing</span>
                         </div>
-                        <div class="community-feed" id="communityFeed"></div>
+                        <p class="helper-note">Use this section for curated stories and promotional articles, while day-to-day engagement appears in the Stampbook Feed.</p>
                     </section>
                 </div>
             </section>
@@ -922,14 +1073,14 @@
 
         <footer class="footer">
             <div>
-                <p class="eyebrow">Stampcoin Platform</p>
+                <p class="eyebrow">Stampbook</p>
                 <h2>Real blockchain infrastructure for the digital collectibles market.</h2>
             </div>
             <div class="footer-links">
                 <a href="/api/info">API Info</a>
                 <a href="/health">Health</a>
                 <a href="https://github.com/zedanazad43/stp" target="_blank" rel="noreferrer">Token Repository</a>
-                <a href="mailto:stampcoin.contact@gmail.com">Contact</a>
+                <a href="mailto:stampbook.contact@gmail.com">Contact</a>
             </div>
         </footer>
     </div>
@@ -945,7 +1096,7 @@
         </button>
         <section class="ai-panel" id="aiPanel" hidden>
             <div class="ai-head">
-                <strong>Stampcoin AI Assistant</strong>
+                <strong>Stampbook AI Assistant</strong>
                 <button id="aiCloseBtn" type="button" aria-label="Close assistant"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="ai-log" id="aiLog">
