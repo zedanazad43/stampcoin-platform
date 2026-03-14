@@ -78,7 +78,7 @@ app.get("/health", (req, res) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     service: "Stampbook",
-    version: "2.0.0"
+    version: "2.0.3"
   });
 });
 
@@ -89,7 +89,7 @@ app.get("/api/status", (req, res) => {
 app.get("/api/info", (req, res) => {
   res.json({
     name: "Stampbook",
-    version: "2.0.0",
+    version: "2.0.3",
     description: "Social collectibles network with wallet, NFT, and marketplace",
     endpoints: {
       wallet: "/api/wallet",

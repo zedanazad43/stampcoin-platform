@@ -288,9 +288,6 @@ document.addEventListener("DOMContentLoaded", () => {
         { name: "Sahar Philately", role: "Postal Historian" }
     ];
     let trendingTopics = ["#Stampbook", "#RareStamp", "#NFTPhilately", "#P2PEscrow", "#STP"];
-    let notificationFilter = "all";
-    let notificationCache = { unread: 0, total: 0, notifications: [] };
-    let notificationOffset = 0;
     const NOTIFICATION_PAGE_SIZE = 10;
 
         const THEME_ORDER = ["classic", "pro", "collector"];
@@ -492,10 +489,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function renderNotificationBoard(payload) {
+    function renderNotificationBoard(payload, options = {}) {
         const board = document.getElementById("notificationBoard");
         const badge = document.getElementById("notificationCountBadge");
         const filterButtons = Array.from(document.querySelectorAll("#notificationFilters [data-notification-filter]"));
+        const notificationFilter = options.notificationFilter
+            ?? socialRuntime?.getNotificationFilter?.()
+            ?? "all";
+        const notificationOffset = options.notificationOffset
+            ?? socialRuntime?.getNotificationOffset?.()
+            ?? 0;
+        const notificationPageSize = options.notificationPageSize ?? NOTIFICATION_PAGE_SIZE;
         if (!board || !badge) return;
 
         if (socialNotifications && typeof socialNotifications.renderNotificationBoard === "function") {
@@ -505,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 filterButtons,
                 notificationFilter,
                 notificationOffset,
-                notificationPageSize: NOTIFICATION_PAGE_SIZE,
+                notificationPageSize,
                 escapeHtml,
                 formatDate
             });
@@ -528,52 +532,6 @@ document.addEventListener("DOMContentLoaded", () => {
         board.innerHTML = "";
     }
 
-    async function loadNotifications(append = false) {
-        const userId = getActiveUserId();
-        if (!append) {
-            notificationOffset = 0;
-        }
-        try {
-            const payload = await requestJson(
-                `api/social/notifications/${encodeURIComponent(userId)}?limit=${NOTIFICATION_PAGE_SIZE}&offset=${notificationOffset}`
-            );
-            if (append) {
-                // Merge new rows into existing cache (append at end, dedup by id)
-                const existingIds = new Set(notificationCache.notifications.map(r => r.id));
-                const newRows = (payload.notifications || []).filter(r => !existingIds.has(r.id));
-                notificationCache = {
-                    ...payload,
-                    notifications: [...notificationCache.notifications, ...newRows]
-                };
-            } else {
-                notificationCache = payload;
-            }
-            renderNotificationBoard(notificationCache);
-        } catch {
-            notificationCache = { unread: 0, total: 0, notifications: [] };
-            renderNotificationBoard(notificationCache);
-        }
-    }
-
-    async function loadGroups() {
-        try {
-            const groups = await requestJson("api/social/groups");
-            renderGroupsList(groups);
-        } catch {
-            renderGroupsList([]);
-        }
-    }
-
-    async function loadFriendsBoard() {
-        const userId = getActiveUserId();
-        try {
-            const payload = await requestJson(`api/social/friends/${encodeURIComponent(userId)}`);
-            renderFriendsBoard(payload);
-        } catch {
-            renderFriendsBoard({ incoming: [], outgoing: [], friends: [] });
-        }
-    }
-
     const socialRuntime = (socialCore && typeof socialCore.createSocialRuntime === "function")
         ? socialCore.createSocialRuntime({
             requestJson,
@@ -583,17 +541,25 @@ document.addEventListener("DOMContentLoaded", () => {
             getSelectedGroupId: () => document.getElementById("groupPostGroupId")?.value || "",
             loadSocialBootstrap,
             loadCommunityPosts,
-            loadGroups,
-            loadFriendsBoard,
-            loadNotifications,
+            renderGroupsList,
+            renderFriendsBoard,
+            renderNotificationBoard,
+            getActiveUserId,
             setTheme,
             setCompactMode,
             setLeftRailCollapsed,
             compactModeStorageKey: COMPACT_MODE_STORAGE_KEY,
             leftRailStorageKey: LEFT_RAIL_STORAGE_KEY,
+            notificationPageSize: NOTIFICATION_PAGE_SIZE,
+            initialNotificationFilter: "all",
+            initialNotificationCache: { unread: 0, total: 0, notifications: [] },
             notificationPollIntervalMs: 30000
         })
         : null;
+
+    const loadGroups = (...args) => socialRuntime?.loadGroups?.(...args);
+    const loadFriendsBoard = (...args) => socialRuntime?.loadFriendsBoard?.(...args);
+    const loadNotifications = (...args) => socialRuntime?.loadNotifications?.(...args);
 
     function appendAiMessage(text, role) {
         const log = document.getElementById("aiLog");
@@ -985,12 +951,12 @@ document.addEventListener("DOMContentLoaded", () => {
             loadFriendsBoard,
             loadGroups,
             loadNotifications,
-            renderNotificationBoard,
-            getNotificationFilter: () => notificationFilter,
-            setNotificationFilter: value => { notificationFilter = value; },
-            getNotificationCache: () => notificationCache,
-            getNotificationOffset: () => notificationOffset,
-            setNotificationOffset: value => { notificationOffset = value; },
+            renderNotificationBoard: payload => socialRuntime?.renderNotificationBoard?.(payload) || renderNotificationBoard(payload),
+            getNotificationFilter: () => socialRuntime?.getNotificationFilter?.() || "all",
+            setNotificationFilter: value => socialRuntime?.setNotificationFilter?.(value),
+            getNotificationCache: () => socialRuntime?.getNotificationCache?.() || { unread: 0, total: 0, notifications: [] },
+            getNotificationOffset: () => socialRuntime?.getNotificationOffset?.() || 0,
+            setNotificationOffset: value => socialRuntime?.setNotificationOffset?.(value),
             notificationPageSize: NOTIFICATION_PAGE_SIZE,
             setSocialView: viewName => socialRuntime?.setSocialView(viewName)
         });
@@ -1295,20 +1261,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         loadSocialBootstrap();
         loadCommunityPosts();
-        loadGroups();
-        loadFriendsBoard();
-        loadNotifications();
-        handleSocialRoute();
-        syncTopNav();
         setTheme(localStorage.getItem("stampbook-theme") || "classic");
         setCompactMode(localStorage.getItem(COMPACT_MODE_STORAGE_KEY) === "1");
         setLeftRailCollapsed(localStorage.getItem(LEFT_RAIL_STORAGE_KEY) === "1");
-        window.setInterval(() => {
-            if (document.hidden) {
-                return;
-            }
-            loadNotifications();
-        }, 30000);
     }
 
     refreshHeroMetrics();

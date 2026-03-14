@@ -8,16 +8,56 @@
             getSelectedGroupId,
             loadSocialBootstrap,
             loadCommunityPosts,
-            loadGroups,
-            loadFriendsBoard,
-            loadNotifications,
+            renderGroupsList,
+            renderFriendsBoard,
+            renderNotificationBoard: renderNotificationBoardToDom,
+            getActiveUserId,
             setTheme,
             setCompactMode,
             setLeftRailCollapsed,
             compactModeStorageKey,
             leftRailStorageKey,
+            notificationPageSize,
+            initialNotificationFilter,
+            initialNotificationCache,
             notificationPollIntervalMs
         } = ctx;
+
+        let notificationFilter = initialNotificationFilter || "all";
+        let notificationCache = initialNotificationCache || { unread: 0, total: 0, notifications: [] };
+        let notificationOffset = 0;
+
+        function getNotificationFilter() {
+            return notificationFilter;
+        }
+
+        function setNotificationFilter(value) {
+            notificationFilter = value || "all";
+        }
+
+        function getNotificationCache() {
+            return notificationCache;
+        }
+
+        function setNotificationCache(value) {
+            notificationCache = value || { unread: 0, total: 0, notifications: [] };
+        }
+
+        function getNotificationOffset() {
+            return notificationOffset;
+        }
+
+        function setNotificationOffset(value) {
+            notificationOffset = Number(value) || 0;
+        }
+
+        function renderNotificationBoard(payload) {
+            renderNotificationBoardToDom(payload, {
+                notificationFilter,
+                notificationOffset,
+                notificationPageSize
+            });
+        }
 
         function parseSocialRoute() {
             const selected = getSelectedGroupId();
@@ -166,6 +206,53 @@
             setSocialView("feed");
         }
 
+        async function loadNotifications(append = false) {
+            const userId = getActiveUserId();
+            if (!append) {
+                notificationOffset = 0;
+            }
+
+            try {
+                const payload = await requestJson(
+                    `api/social/notifications/${encodeURIComponent(userId)}?limit=${notificationPageSize}&offset=${notificationOffset}`
+                );
+                if (append) {
+                    const existingRows = Array.isArray(notificationCache.notifications) ? notificationCache.notifications : [];
+                    const existingIds = new Set(existingRows.map(row => row.id));
+                    const newRows = (payload.notifications || []).filter(row => !existingIds.has(row.id));
+                    notificationCache = {
+                        ...payload,
+                        notifications: [...existingRows, ...newRows]
+                    };
+                } else {
+                    notificationCache = payload;
+                }
+                renderNotificationBoard(notificationCache);
+            } catch {
+                notificationCache = { unread: 0, total: 0, notifications: [] };
+                renderNotificationBoard(notificationCache);
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                const groups = await requestJson("api/social/groups");
+                renderGroupsList(groups);
+            } catch {
+                renderGroupsList([]);
+            }
+        }
+
+        async function loadFriendsBoard() {
+            const userId = getActiveUserId();
+            try {
+                const payload = await requestJson(`api/social/friends/${encodeURIComponent(userId)}`);
+                renderFriendsBoard(payload);
+            } catch {
+                renderFriendsBoard({ incoming: [], outgoing: [], friends: [] });
+            }
+        }
+
         function syncTopNav() {
             const hash = window.location.hash || "#hero";
             const normalizedHash = (socialState && typeof socialState.normalizeTopNavHash === "function")
@@ -214,7 +301,17 @@
             setSocialView,
             handleSocialRoute,
             syncTopNav,
-            initializeSocialExperience
+            initializeSocialExperience,
+            loadGroups,
+            loadFriendsBoard,
+            loadNotifications,
+            renderNotificationBoard,
+            getNotificationFilter,
+            setNotificationFilter,
+            getNotificationCache,
+            setNotificationCache,
+            getNotificationOffset,
+            setNotificationOffset
         };
     }
 

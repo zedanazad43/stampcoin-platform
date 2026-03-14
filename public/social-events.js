@@ -12,7 +12,6 @@
             loadGroups,
             loadNotifications,
             renderNotificationBoard,
-            getNotificationFilter,
             setNotificationFilter,
             getNotificationCache,
             getNotificationOffset,

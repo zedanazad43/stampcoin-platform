@@ -1,6 +1,6 @@
 {
   "name": "stampcoin-platform",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "description": "Stampcoin Platform - blockchain-powered digital stamps, wallet and marketplace",
   "main": "server.js",
   "type": "commonjs",
@@ -9,7 +9,7 @@
     "dev": "node server.js",
     "build": "echo 'Build complete - static assets ready'",
     "test": "node --test tests/*.test.js",
-    "lint": "echo 'Linting configured'",
+    "lint": "eslint server.js public/*.js tests/*.test.js",
     "web3:compile": "hardhat compile",
     "web3:deploy:sepolia": "hardhat run scripts/web3/deploy-sepolia.js --network sepolia",
     "web3:export-abis": "node scripts/web3/export-abis.js",
@@ -29,6 +29,7 @@
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "dotenv": "^17.3.1",
+    "eslint": "^9.23.0",
     "ethers": "^5.7.2",
     "hardhat": "^2.22.17"
   }

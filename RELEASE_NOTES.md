@@ -1,12 +1,19 @@
-# Release Notes — v2.0.2-social-readiness
+# Release Notes — v2.0.3
 
 **Date:** 2026-03-14  
-**Tag:** `v2.0.2-social-readiness`  
+**Tag:** `v2.0.3`  
 **Branch:** `main`
 
 ## Summary
 
-This release completes a full modularization and production-readiness pass on the social JavaScript runtime. All social logic has been migrated out of the monolithic `app.js` into dedicated, independently testable modules. The test suite now covers social route parsing, notification rendering, and frontend regression checks (17 tests, all green).
+This release carries forward the social modularization work into a clean release boundary. The remaining social data loaders and notification state now live in `social-core`, `app.js` is reduced to UI composition and wiring, the repo has a real ESLint gate in CI, and the smoke suite now covers social runtime route transitions and notification polling.
+
+## v2.0.3 Follow-up
+
+- Moved the remaining social loaders and notification state from `public/app.js` into `public/social-core.js`.
+- Added a real `eslint`-backed lint script and extended the GitHub Actions build/test workflow to run lint and build verification.
+- Added `tests/social-core.test.js` to cover profile/group route transitions and notification polling behavior.
+- Updated application version surfaces to `2.0.3` and cut a clean release point after `RELEASE_NOTES.md` landed.
 
 ---
 
