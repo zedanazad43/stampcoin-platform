@@ -18,9 +18,7 @@
             getNotificationOffset,
             setNotificationOffset,
             notificationPageSize,
-            setSocialView,
-            handleSocialRoute,
-            syncTopNav
+            setSocialView
         } = ctx;
 
         document.getElementById("communityFeed")?.addEventListener("click", async event => {
@@ -338,10 +336,6 @@
             }, 80);
         });
 
-        window.addEventListener("hashchange", () => {
-            handleSocialRoute();
-            syncTopNav();
-        });
     }
 
     globalThis.StampbookSocialEvents = {

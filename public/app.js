@@ -992,9 +992,7 @@ document.addEventListener("DOMContentLoaded", () => {
             getNotificationOffset: () => notificationOffset,
             setNotificationOffset: value => { notificationOffset = value; },
             notificationPageSize: NOTIFICATION_PAGE_SIZE,
-            setSocialView: viewName => socialRuntime?.setSocialView(viewName),
-            handleSocialRoute: () => socialRuntime?.handleSocialRoute(),
-            syncTopNav: () => socialRuntime?.syncTopNav()
+            setSocialView: viewName => socialRuntime?.setSocialView(viewName)
         });
     }
 

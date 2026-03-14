@@ -188,6 +188,11 @@
             handleSocialRoute();
             syncTopNav();
 
+            window.addEventListener("hashchange", () => {
+                handleSocialRoute();
+                syncTopNav();
+            });
+
             setTheme(localStorage.getItem("stampbook-theme") || "classic");
             setCompactMode(localStorage.getItem(compactModeStorageKey) === "1");
             setLeftRailCollapsed(localStorage.getItem(leftRailStorageKey) === "1");
