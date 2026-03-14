@@ -64,3 +64,9 @@ coverage/
 # Security scanning
 node_modules/.bin/
 package-lock.json.bak
+
+# Local runtime data
+artifacts/
+cache/
+transactions.json
+wallets.json
