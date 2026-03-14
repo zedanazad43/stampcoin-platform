@@ -1,6 +1,8 @@
 const API_ROOT = "/";
 const helpers = globalThis.StampbookAppHelpers || globalThis.StampcoinAppHelpers;
 const socialUi = globalThis.StampbookSocialUI;
+const socialState = globalThis.StampbookSocialState;
+const socialNotifications = globalThis.StampbookSocialNotifications;
 
 function apiPath(path) {
     return `${API_ROOT}${path.replace(/^\//, "")}`;
@@ -289,16 +291,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let notificationOffset = 0;
     const NOTIFICATION_PAGE_SIZE = 10;
 
-    const NOTIFICATION_ICONS = {
-      new_follower: "fa-user-plus",
-      post_reaction: "fa-heart",
-      post_comment: "fa-comment",
-      post_share: "fa-share-nodes",
-      group_post: "fa-layer-group",
-      group_member_joined: "fa-users",
-      friend_request: "fa-handshake",
-      friend_request_response: "fa-handshake-simple",
-    };
         const THEME_ORDER = ["classic", "pro", "collector"];
         const THEME_LABELS = {
                 classic: "Classic",
@@ -479,6 +471,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function parseSocialRoute() {
+        const selected = document.getElementById("groupPostGroupId")?.value || "";
+        if (socialState && typeof socialState.parseSocialRoute === "function") {
+            return socialState.parseSocialRoute(window.location.hash || "", selected);
+        }
         const hash = (window.location.hash || "").replace(/^#/, "").trim();
         if (hash.startsWith("profile/")) {
             return { view: "profile", value: decodeURIComponent(hash.slice("profile/".length)) };
@@ -487,7 +483,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return { view: "group", value: decodeURIComponent(hash.slice("group/".length)) };
         }
         if (hash === "group") {
-            const selected = document.getElementById("groupPostGroupId")?.value || "";
             return { view: "group", value: selected };
         }
         return { view: "feed", value: "" };
@@ -623,8 +618,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function syncTopNav() {
         const hash = window.location.hash || "#hero";
-        const normalizedHash = (hash.startsWith("#profile/") || hash.startsWith("#group/"))
-            ? "#stampbook-social"
+        const normalizedHash = (socialState && typeof socialState.normalizeTopNavHash === "function")
+            ? socialState.normalizeTopNavHash(hash)
             : hash;
         const tabs = document.querySelectorAll(".topnav .nav-tab");
         tabs.forEach(tab => {
@@ -708,67 +703,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const filterButtons = document.querySelectorAll("#notificationFilters [data-notification-filter]");
         if (!board || !badge) return;
 
-        const notifications = Array.isArray(payload?.notifications) ? payload.notifications : [];
-        const unread = Number(payload?.unread || 0);
-        const total = Number(payload?.total || notifications.length);
-        badge.textContent = String(unread);
-        badge.hidden = unread <= 0;
-
         filterButtons.forEach(button => {
             const selected = button.getAttribute("data-notification-filter") === notificationFilter;
             button.classList.toggle("active", selected);
         });
 
-        const filtered = notifications.filter(row => {
-            if (notificationFilter === "unread") {
-                return !row.isRead;
-            }
-            if (notificationFilter === "requests") {
-                return String(row.type || "").includes("friend_request");
-            }
-            return true;
-        });
+        if (socialNotifications && typeof socialNotifications.renderNotificationBoardHtml === "function") {
+            const rendered = socialNotifications.renderNotificationBoardHtml(payload, {
+                notificationFilter,
+                notificationOffset,
+                notificationPageSize: NOTIFICATION_PAGE_SIZE,
+                escapeHtml,
+                formatDate
+            });
+            badge.textContent = String(rendered.unread || 0);
+            badge.hidden = Number(rendered.unread || 0) <= 0;
+            board.innerHTML = rendered.html;
+            return;
+        }
 
-        const rows = filtered.map(row => {
-            const meta = row.meta || {};
-            const routeHref = meta.groupId
-                ? `#group/${encodeURIComponent(meta.groupId)}`
-                : meta.followerId || meta.fromUserId
-                    ? `#profile/${encodeURIComponent(meta.followerId || meta.fromUserId)}`
-                    : "#stampbook-social";
-            const iconClass = NOTIFICATION_ICONS[row.type] || "fa-bell";
-            const readToggle = row.isRead
-                ? `<button type="button" class="btn-icon-sm" data-mark-unread="${escapeHtml(row.id || "")}"><i class="fa-solid fa-envelope" title="Mark as unread"></i></button>`
-                : `<button type="button" class="btn-icon-sm" data-mark-read="${escapeHtml(row.id || "")}"><i class="fa-solid fa-envelope-open" title="Mark as read"></i></button>`;
-            return `
-                <div class="mini-row ${row.isRead ? "" : "unread-notification"}" data-notification-id="${escapeHtml(row.id || "")}">
-                    <span class="notification-icon"><i class="fa-solid ${iconClass}"></i></span>
-                    <span class="notification-content">
-                        <span>${escapeHtml(row.message || row.type || "Notification")}</span>
-                        <small>${escapeHtml(formatDate(row.createdAt))}</small>
-                    </span>
-                    <span class="mini-actions">
-                        <a class="mini-link" href="${routeHref}">Open</a>
-                        ${readToggle}
-                    </span>
-                </div>
-            `;
-        });
-
-        const hasMore = total > notificationOffset + NOTIFICATION_PAGE_SIZE && notificationFilter === "all";
-        const loadMoreHtml = hasMore
-            ? `<div class="mini-row notification-load-more"><button type="button" id="notifLoadMoreBtn">Load more</button></div>`
-            : "";
-
-        board.innerHTML = rows.length
-            ? rows.join("") + loadMoreHtml
-            : `
-                <div class="social-empty">
-                    <i class="fa-solid fa-bell-slash"></i>
-                    <strong>No notifications in this filter</strong>
-                    <p>New follows, comments, and requests will appear here.</p>
-                </div>
-            `;
+        const unread = Number(payload?.unread || 0);
+        badge.textContent = String(unread);
+        badge.hidden = unread <= 0;
+        board.innerHTML = "";
     }
 
     async function loadNotifications(append = false) {
