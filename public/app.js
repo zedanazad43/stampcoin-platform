@@ -4,6 +4,7 @@ const socialUi = globalThis.StampbookSocialUI;
 const socialState = globalThis.StampbookSocialState;
 const socialNotifications = globalThis.StampbookSocialNotifications;
 const socialEvents = globalThis.StampbookSocialEvents;
+const socialCore = globalThis.StampbookSocialCore;
 
 function apiPath(path) {
     return `${API_ROOT}${path.replace(/^\//, "")}`;
@@ -1440,24 +1441,6 @@ document.addEventListener("DOMContentLoaded", () => {
         setLeftRailCollapsed(!collapsed);
     });
 
-    document.getElementById("stampbookComposerForm")?.addEventListener("click", event => {
-        const actionButton = event.target.closest("button[data-compose-action]");
-        if (!actionButton) return;
-        const action = actionButton.getAttribute("data-compose-action");
-        const input = document.getElementById("sbPostText");
-        if (!input) return;
-
-        const suffix = action === "photo"
-            ? " [photo update]"
-            : action === "tag"
-                ? " @collector"
-                : " feeling excited about new stamps";
-
-        const current = input.value.trim();
-        input.value = current ? `${current}${suffix}` : suffix.trim();
-        input.focus();
-    });
-
     document.getElementById("aiCloseBtn")?.addEventListener("click", () => {
         const panel = document.getElementById("aiPanel");
         if (panel) panel.hidden = true;
@@ -1478,18 +1461,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    document.getElementById("floatingComposeBtn")?.addEventListener("click", () => {
-        if (window.location.hash !== "#stampbook-social") {
-            window.location.hash = "#stampbook-social";
-        }
-        setSocialView("feed");
-        window.setTimeout(() => {
-            const textarea = document.getElementById("sbPostText");
-            textarea?.focus();
-            textarea?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 80);
-    });
-
     registerSubmit("aiForm", async event => {
         event.preventDefault();
         const input = document.getElementById("aiInput");
@@ -1502,26 +1473,44 @@ document.addEventListener("DOMContentLoaded", () => {
         event.target.reset();
     });
 
-    loadSocialBootstrap();
-    loadCommunityPosts();
-    loadGroups();
-    loadFriendsBoard();
-    loadNotifications();
-    handleSocialRoute();
-    syncTopNav();
-    setTheme(localStorage.getItem("stampbook-theme") || "classic");
-    setCompactMode(localStorage.getItem(COMPACT_MODE_STORAGE_KEY) === "1");
-    setLeftRailCollapsed(localStorage.getItem(LEFT_RAIL_STORAGE_KEY) === "1");
+    if (socialCore && typeof socialCore.initializeSocialExperience === "function") {
+        socialCore.initializeSocialExperience({
+            loadSocialBootstrap,
+            loadCommunityPosts,
+            loadGroups,
+            loadFriendsBoard,
+            loadNotifications,
+            handleSocialRoute,
+            syncTopNav,
+            setTheme,
+            setCompactMode,
+            setLeftRailCollapsed,
+            compactModeStorageKey: COMPACT_MODE_STORAGE_KEY,
+            leftRailStorageKey: LEFT_RAIL_STORAGE_KEY,
+            notificationPollIntervalMs: 30000
+        });
+    } else {
+        loadSocialBootstrap();
+        loadCommunityPosts();
+        loadGroups();
+        loadFriendsBoard();
+        loadNotifications();
+        handleSocialRoute();
+        syncTopNav();
+        setTheme(localStorage.getItem("stampbook-theme") || "classic");
+        setCompactMode(localStorage.getItem(COMPACT_MODE_STORAGE_KEY) === "1");
+        setLeftRailCollapsed(localStorage.getItem(LEFT_RAIL_STORAGE_KEY) === "1");
+        window.setInterval(() => {
+            if (document.hidden) {
+                return;
+            }
+            loadNotifications();
+        }, 30000);
+    }
 
     refreshHeroMetrics();
     loadListings();
     loadHealth();
     loadTokenDist();
 
-    window.setInterval(() => {
-        if (document.hidden) {
-            return;
-        }
-        loadNotifications();
-    }, 30000);
 });
