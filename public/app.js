@@ -284,7 +284,20 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
     let trendingTopics = ["#Stampbook", "#RareStamp", "#NFTPhilately", "#P2PEscrow", "#STP"];
     let notificationFilter = "all";
-    let notificationCache = { unread: 0, notifications: [] };
+    let notificationCache = { unread: 0, total: 0, notifications: [] };
+    let notificationOffset = 0;
+    const NOTIFICATION_PAGE_SIZE = 10;
+
+    const NOTIFICATION_ICONS = {
+      new_follower: "fa-user-plus",
+      post_reaction: "fa-heart",
+      post_comment: "fa-comment",
+      post_share: "fa-share-nodes",
+      group_post: "fa-layer-group",
+      group_member_joined: "fa-users",
+      friend_request: "fa-handshake",
+      friend_request_response: "fa-handshake-simple",
+    };
     const web3State = {
         provider: null,
         signer: null,
@@ -586,6 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const notifications = Array.isArray(payload?.notifications) ? payload.notifications : [];
         const unread = Number(payload?.unread || 0);
+        const total = Number(payload?.total || notifications.length);
         badge.textContent = String(unread);
         badge.hidden = unread <= 0;
 
@@ -604,38 +618,65 @@ document.addEventListener("DOMContentLoaded", () => {
             return true;
         });
 
-        board.innerHTML = filtered.length
-            ? filtered.slice(0, 8).map(row => {
-                const meta = row.meta || {};
-                const routeHref = meta.groupId
-                    ? `#group/${encodeURIComponent(meta.groupId)}`
-                    : meta.followerId || meta.fromUserId
-                        ? `#profile/${encodeURIComponent(meta.followerId || meta.fromUserId)}`
-                        : "#stampbook-social";
-                return `
-                <div class="mini-row ${row.isRead ? "" : "unread-notification"}">
+        const rows = filtered.map(row => {
+            const meta = row.meta || {};
+            const routeHref = meta.groupId
+                ? `#group/${encodeURIComponent(meta.groupId)}`
+                : meta.followerId || meta.fromUserId
+                    ? `#profile/${encodeURIComponent(meta.followerId || meta.fromUserId)}`
+                    : "#stampbook-social";
+            const iconClass = NOTIFICATION_ICONS[row.type] || "fa-bell";
+            const readToggle = row.isRead
+                ? `<button type="button" class="btn-icon-sm" data-mark-unread="${escapeHtml(row.id || "")}"><i class="fa-solid fa-envelope" title="Mark as unread"></i></button>`
+                : `<button type="button" class="btn-icon-sm" data-mark-read="${escapeHtml(row.id || "")}"><i class="fa-solid fa-envelope-open" title="Mark as read"></i></button>`;
+            return `
+                <div class="mini-row ${row.isRead ? "" : "unread-notification"}" data-notification-id="${escapeHtml(row.id || "")}">
+                    <span class="notification-icon"><i class="fa-solid ${iconClass}"></i></span>
                     <span class="notification-content">
                         <span>${escapeHtml(row.message || row.type || "Notification")}</span>
                         <small>${escapeHtml(formatDate(row.createdAt))}</small>
                     </span>
                     <span class="mini-actions">
                         <a class="mini-link" href="${routeHref}">Open</a>
-                        ${row.isRead ? "" : `<button type=\"button\" data-mark-read=\"${escapeHtml(row.id || "") }\">Read</button>`}
+                        ${readToggle}
                     </span>
                 </div>
             `;
-            }).join("")
+        });
+
+        const hasMore = total > notificationOffset + NOTIFICATION_PAGE_SIZE && notificationFilter === "all";
+        const loadMoreHtml = hasMore
+            ? `<div class="mini-row notification-load-more"><button type="button" id="notifLoadMoreBtn">Load more</button></div>`
+            : "";
+
+        board.innerHTML = rows.length
+            ? rows.join("") + loadMoreHtml
             : '<div class="mini-row"><span>No notifications yet</span></div>';
     }
 
-    async function loadNotifications() {
+    async function loadNotifications(append = false) {
         const userId = getActiveUserId();
+        if (!append) {
+            notificationOffset = 0;
+        }
         try {
-            const payload = await requestJson(`api/social/notifications/${encodeURIComponent(userId)}?limit=20`);
-            notificationCache = payload;
+            const payload = await requestJson(
+                `api/social/notifications/${encodeURIComponent(userId)}?limit=${NOTIFICATION_PAGE_SIZE}&offset=${notificationOffset}`
+            );
+            if (append) {
+                // Merge new rows into existing cache (append at end, dedup by id)
+                const existingIds = new Set(notificationCache.notifications.map(r => r.id));
+                const newRows = (payload.notifications || []).filter(r => !existingIds.has(r.id));
+                notificationCache = {
+                    ...payload,
+                    notifications: [...notificationCache.notifications, ...newRows]
+                };
+            } else {
+                notificationCache = payload;
+            }
             renderNotificationBoard(notificationCache);
         } catch {
-            notificationCache = { unread: 0, notifications: [] };
+            notificationCache = { unread: 0, total: 0, notifications: [] };
             renderNotificationBoard(notificationCache);
         }
     }
@@ -1239,20 +1280,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById("notificationBoard")?.addEventListener("click", async event => {
-        const markBtn = event.target.closest("button[data-mark-read]");
-        if (!markBtn) return;
-        const notificationId = markBtn.getAttribute("data-mark-read");
-        if (!notificationId) return;
+        // Load more
+        if (event.target.closest("#notifLoadMoreBtn")) {
+            notificationOffset += NOTIFICATION_PAGE_SIZE;
+            await loadNotifications(true);
+            return;
+        }
 
-        try {
-            await requestJson("api/social/notifications/read", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: getActiveUserId(), notificationIds: [notificationId] })
-            });
-            await loadNotifications();
-        } catch (error) {
-            renderFeedback("stampbookComposerResult", error.message, true);
+        // Mark as read
+        const markReadBtn = event.target.closest("button[data-mark-read]");
+        if (markReadBtn) {
+            const notificationId = markReadBtn.getAttribute("data-mark-read");
+            if (!notificationId) return;
+            try {
+                await requestJson("api/social/notifications/read", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: getActiveUserId(), notificationIds: [notificationId] })
+                });
+                await loadNotifications();
+            } catch (error) {
+                renderFeedback("stampbookComposerResult", error.message, true);
+            }
+            return;
+        }
+
+        // Mark as unread
+        const markUnreadBtn = event.target.closest("button[data-mark-unread]");
+        if (markUnreadBtn) {
+            const notificationId = markUnreadBtn.getAttribute("data-mark-unread");
+            if (!notificationId) return;
+            try {
+                await requestJson("api/social/notifications/unread", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: getActiveUserId(), notificationIds: [notificationId] })
+                });
+                await loadNotifications();
+            } catch (error) {
+                renderFeedback("stampbookComposerResult", error.message, true);
+            }
         }
     });
 

@@ -913,15 +913,18 @@ app.get("/api/social/notifications/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const limit = Number(req.query.limit || 20);
+    const offset = Number(req.query.offset || 0);
     const notifications = await readJsonArray(SOCIAL_NOTIFICATIONS_FILE);
     const userNotifications = notifications
       .filter(row => row.userId === userId)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : 20;
-    const rows = userNotifications.slice(0, safeLimit);
+    const safeOffset = Number.isFinite(offset) && offset >= 0 ? offset : 0;
+    const rows = userNotifications.slice(safeOffset, safeOffset + safeLimit);
     const unread = userNotifications.filter(row => !row.isRead).length;
-    res.json({ userId, unread, notifications: rows });
+    const total = userNotifications.length;
+    res.json({ userId, unread, total, offset: safeOffset, limit: safeLimit, notifications: rows });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -947,6 +950,36 @@ app.post("/api/social/notifications/read", async (req, res) => {
       }
       if (!row.isRead) {
         row.isRead = true;
+        marked += 1;
+      }
+    }
+
+    await writeJsonArray(SOCIAL_NOTIFICATIONS_FILE, notifications);
+    res.json({ ok: true, userId, marked });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/social/notifications/unread", async (req, res) => {
+  try {
+    const { userId, notificationIds } = req.body || {};
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+    if (!Array.isArray(notificationIds) || notificationIds.length === 0) {
+      return res.status(400).json({ error: "notificationIds array is required" });
+    }
+
+    const notifications = await readJsonArray(SOCIAL_NOTIFICATIONS_FILE);
+    const targetIds = new Set(notificationIds);
+    let marked = 0;
+
+    for (const row of notifications) {
+      if (row.userId !== userId) continue;
+      if (!targetIds.has(row.id)) continue;
+      if (row.isRead) {
+        row.isRead = false;
         marked += 1;
       }
     }

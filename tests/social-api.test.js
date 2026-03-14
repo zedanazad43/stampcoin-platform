@@ -173,3 +173,68 @@ test("profile stats reflect post interactions and mark-read clears unread count"
   const notificationsAfter = await requestJson("/api/social/notifications/collector-pro");
   assert.equal(notificationsAfter.unread, 0);
 });
+
+test("mark-unread toggles notification back to unread after mark-read", async () => {
+  // Create a notification by following the target user
+  await requestJson("/api/social/follow", {
+    method: "POST",
+    body: JSON.stringify({ followerId: "felix", targetId: "dalia" })
+  });
+
+  const before = await requestJson("/api/social/notifications/dalia");
+  assert.equal(before.unread >= 1, true);
+  const notifId = before.notifications[0].id;
+
+  // Mark all as read
+  await requestJson("/api/social/notifications/read", {
+    method: "POST",
+    body: JSON.stringify({ userId: "dalia" })
+  });
+
+  const afterRead = await requestJson("/api/social/notifications/dalia");
+  assert.equal(afterRead.unread, 0);
+
+  // Now mark-unread on the specific notification
+  const unreadResult = await requestJson("/api/social/notifications/unread", {
+    method: "POST",
+    body: JSON.stringify({ userId: "dalia", notificationIds: [notifId] })
+  });
+  assert.equal(unreadResult.ok, true);
+  assert.equal(unreadResult.marked >= 1, true);
+
+  const afterUnread = await requestJson("/api/social/notifications/dalia");
+  assert.equal(afterUnread.unread >= 1, true);
+});
+
+test("notification pagination returns correct offset slices and total", async () => {
+  // Generate 12 notifications for a unique user via follow events
+  const targetUser = "page-test-user";
+  for (let i = 0; i < 12; i++) {
+    await requestJson("/api/social/follow", {
+      method: "POST",
+      body: JSON.stringify({ followerId: `follower-${i}`, targetId: targetUser })
+    });
+  }
+
+  const page1 = await requestJson(`/api/social/notifications/${targetUser}?limit=5&offset=0`);
+  assert.equal(page1.notifications.length, 5);
+  assert.equal(page1.total >= 12, true);
+  assert.equal(page1.offset, 0);
+  assert.equal(page1.limit, 5);
+
+  const page2 = await requestJson(`/api/social/notifications/${targetUser}?limit=5&offset=5`);
+  assert.equal(page2.notifications.length, 5);
+  assert.equal(page2.offset, 5);
+
+  const page3 = await requestJson(`/api/social/notifications/${targetUser}?limit=5&offset=10`);
+  assert.equal(page3.notifications.length >= 2, true);
+
+  // Ensure pages don't overlap (all IDs are unique across pages)
+  const allIds = [
+    ...page1.notifications.map(r => r.id),
+    ...page2.notifications.map(r => r.id),
+    ...page3.notifications.map(r => r.id),
+  ];
+  const uniqueIds = new Set(allIds);
+  assert.equal(uniqueIds.size, allIds.length);
+});
