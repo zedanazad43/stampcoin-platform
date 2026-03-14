@@ -1,5 +1,6 @@
 const API_ROOT = "/";
 const helpers = globalThis.StampbookAppHelpers || globalThis.StampcoinAppHelpers;
+const socialUi = globalThis.StampbookSocialUI;
 
 function apiPath(path) {
     return `${API_ROOT}${path.replace(/^\//, "")}`;
@@ -319,30 +320,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderStories() {
         const rail = document.getElementById("storyRail");
         if (!rail) return;
-        const gradients = [
-            "linear-gradient(145deg, #245f97, #0d8b9d)",
-            "linear-gradient(145deg, #2f4ca5, #1d7cc8)",
-            "linear-gradient(145deg, #9b5d1f, #d48f37)",
-            "linear-gradient(145deg, #136f5d, #2e9d7f)",
-            "linear-gradient(145deg, #6b3d9a, #8f5bc6)"
-        ];
-
-        rail.innerHTML = storyItems.map((story, index) => {
-            const name = String(story.name || "Collector");
-            const initials = name.slice(0, 2).toUpperCase();
-            const tag = String(story.tag || "Stampbook update");
-            const cover = gradients[index % gradients.length];
-            return `
-            <article class="story-item" style="background:${cover}">
-                <div class="story-overlay"></div>
-                <span class="story-avatar">${escapeHtml(initials)}</span>
-                <div class="story-copy">
-                    <strong>${escapeHtml(name)}</strong>
-                    <p>${escapeHtml(tag)}</p>
-                </div>
-            </article>
-        `;
-        }).join("");
+        if (socialUi && typeof socialUi.renderStoriesHtml === "function") {
+            rail.innerHTML = socialUi.renderStoriesHtml(storyItems, escapeHtml);
+            return;
+        }
+        rail.innerHTML = "";
     }
 
     function renderStoriesSkeleton() {
@@ -405,24 +387,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderPeopleSuggestions() {
         const list = document.getElementById("peopleYouMayKnow");
         if (!list) return;
-        list.innerHTML = peopleSuggestions.map(person => {
-            const name = String(person.name || "Collector");
-            const initials = name.slice(0, 2).toUpperCase();
-            const mutual = (name.length % 4) + 1;
-            return `
-            <div class="person-row">
-                <div class="person-card-main">
-                    <span class="person-avatar">${escapeHtml(initials)}</span>
-                    <div>
-                        <strong>${escapeHtml(name)}</strong>
-                        <p>${escapeHtml(person.role)}</p>
-                        <small>${mutual} mutual collector${mutual > 1 ? "s" : ""}</small>
-                    </div>
-                </div>
-                <button type="button" data-follow-target="${escapeHtml(person.id || person.name)}">Follow</button>
-            </div>
-        `;
-        }).join("");
+        if (socialUi && typeof socialUi.renderPeopleSuggestionsHtml === "function") {
+            list.innerHTML = socialUi.renderPeopleSuggestionsHtml(peopleSuggestions, escapeHtml);
+            return;
+        }
+        list.innerHTML = "";
     }
 
     function renderTrendingTopics() {
@@ -440,57 +409,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        feed.innerHTML = communityPosts.map(post => {
-            const likeCount = Number(post.reactions?.like || 0);
-            const loveCount = Number(post.reactions?.love || 0);
-            const wowCount = Number(post.reactions?.wow || 0);
-            const commentCount = Array.isArray(post.comments) ? post.comments.length : 0;
-            const shareCount = Number(post.shares || 0);
-            const totalReactions = likeCount + loveCount + wowCount;
-            const postId = escapeHtml(post.id || post.createdAt || post.title);
-            const author = escapeHtml(post.authorId || "stampbook-user");
-            const initials = escapeHtml((post.authorId || "SB").slice(0, 2).toUpperCase());
-            return `
-            <article class="feed-post" data-post-id="${postId}">
-                <div class="feed-head">
-                    <div class="feed-author">
-                        <span class="feed-avatar">${initials}</span>
-                        <span class="feed-author-meta">
-                            <strong>${author}</strong>
-                            <small>${escapeHtml(formatDate(post.createdAt || Date.now()))} · STP Feed</small>
-                        </span>
-                    </div>
-                    <button class="feed-more" type="button" data-action="menu" aria-label="Post options"><i class="fa-solid fa-ellipsis"></i></button>
-                </div>
-                <div class="feed-menu" hidden>
-                    <button type="button" data-post-menu-action="save">Save post</button>
-                    <button type="button" data-post-menu-action="pin">Pin to top</button>
-                    <button type="button" data-post-menu-action="report">Report</button>
-                </div>
-                <h4>${escapeHtml(post.title || "New stamp update")}</h4>
-                <p>${escapeHtml(post.body || "")}</p>
-                ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" alt="Stamp preview for ${escapeHtml(post.title || "post")}" loading="lazy" decoding="async">` : ""}
-                <div class="feed-stats">
-                    <span><i class="fa-solid fa-heart"></i> ${totalReactions} reactions</span>
-                    <span>${commentCount} comments · ${shareCount} shares</span>
-                </div>
-                <div class="feed-actions">
-                    <button type="button" data-action="like"><i class="fa-regular fa-thumbs-up"></i> Like (${likeCount})</button>
-                    <button type="button" data-action="love"><i class="fa-regular fa-heart"></i> Love (${loveCount})</button>
-                    <button type="button" data-action="wow"><i class="fa-regular fa-face-surprise"></i> Wow (${wowCount})</button>
-                    <button type="button" data-action="share"><i class="fa-solid fa-share"></i> Share (${shareCount})</button>
-                </div>
-                <form class="feed-comment-form" data-action="comment">
-                    <span class="feed-comment-avatar">${initials}</span>
-                    <input name="comment" placeholder="Write a public comment..." required>
-                    <button type="submit">Post</button>
-                </form>
-                <div class="feed-comments">
-                    ${(post.comments || []).slice(-3).map(comment => `<div class="comment-item"><strong>${escapeHtml(comment.authorId || "user")}</strong><span>${escapeHtml(comment.text || "")}</span></div>`).join("")}
-                </div>
-            </article>
-        `;
-        }).join("");
+        if (socialUi && typeof socialUi.renderCommunityFeedHtml === "function") {
+            feed.innerHTML = socialUi.renderCommunityFeedHtml(communityPosts, { escapeHtml, formatDate });
+            return;
+        }
+
+        feed.innerHTML = "";
     }
 
     function setTheme(themeName) {
