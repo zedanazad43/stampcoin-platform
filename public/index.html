@@ -60,24 +60,48 @@
     <div class="site-shell">
         <header class="topbar">
             <a class="brand" href="#hero">
-                <span class="brand-mark">SB</span>
+                <span class="brand-mark" aria-hidden="true">
+                    <i class="fa-solid fa-stamp"></i>
+                </span>
                 <span class="brand-copy">
                     <strong>Stampbook</strong>
-                    <small>Social collectibles network</small>
+                    <small>STP Social Chain</small>
                 </span>
             </a>
             <nav class="topnav">
-                <a href="#stampbook-social">Stampbook Feed</a>
-                <a href="#marketplace">Marketplace</a>
-                <a href="#wallet-lab">Wallet Lab</a>
-                <a href="#token-hub">Token Hub</a>
-                <a href="#cultural-hub">Cultural Hub</a>
-                <a href="#nft-mint-studio">NFT Studio</a>
-                <a href="#trade-hub">Trade Hub</a>
-                <a href="#ops-center">Ops Center</a>
-                <a href="#admin-panel">Admin</a>
+                <a class="nav-tab" data-nav-target="#stampbook-social" href="#stampbook-social" title="Feed">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Feed</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#marketplace" href="#marketplace" title="Marketplace">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Market</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#wallet-lab" href="#wallet-lab" title="Wallet Lab">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Wallet</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#token-hub" href="#token-hub" title="Token Hub">
+                    <i class="fa-solid fa-coins"></i>
+                    <span>STP</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#nft-mint-studio" href="#nft-mint-studio" title="NFT Studio">
+                    <i class="fa-solid fa-cube"></i>
+                    <span>NFT</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#admin-panel" href="#admin-panel" title="Admin">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Admin</span>
+                </a>
             </nav>
             <div class="topbar-actions">
+                <div class="coin-chip" title="Stampbook Token">
+                    <span class="coin-chip-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+                    <span class="coin-chip-copy">
+                        <strong>STP</strong>
+                        <small>Stampbook Coin</small>
+                    </span>
+                </div>
                 <a class="topbar-icon" href="#social-notifications" title="Notifications" aria-label="Notifications">
                     <i class="fa-solid fa-bell"></i>
                     <span class="badge" id="notificationCountBadge">0</span>
@@ -128,6 +152,13 @@
                         <span><i class="fa-solid fa-coins"></i> STP Token + On-chain Wallets</span>
                         <span><i class="fa-solid fa-shield-halved"></i> Auth-protected Admin API</span>
                         <span><i class="fa-solid fa-rocket"></i> Live on Fly.io</span>
+                    </div>
+                    <div class="brand-identity-strip">
+                        <span class="identity-mark"><i class="fa-solid fa-stamp"></i></span>
+                        <span class="identity-copy">
+                            <strong>Stampbook Coin - STP</strong>
+                            <small>Social first. Collectibles native. On-chain ready.</small>
+                        </span>
                     </div>
                 </div>
 

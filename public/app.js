@@ -540,6 +540,16 @@ document.addEventListener("DOMContentLoaded", () => {
         setSocialView("feed");
     }
 
+    function syncTopNav() {
+        const hash = window.location.hash || "#hero";
+        const tabs = document.querySelectorAll(".topnav .nav-tab");
+        tabs.forEach(tab => {
+            const target = tab.getAttribute("data-nav-target") || tab.getAttribute("href") || "";
+            const active = target && hash.startsWith(target);
+            tab.classList.toggle("active", active);
+        });
+    }
+
     function renderFriendsBoard(payload) {
         const board = document.getElementById("friendsBoard");
         if (!board) return;
@@ -1330,6 +1340,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("hashchange", () => {
         handleSocialRoute();
+        syncTopNav();
     });
 
     registerSubmit("mintJpgForm", async event => {
@@ -1602,6 +1613,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadFriendsBoard();
     loadNotifications();
     handleSocialRoute();
+    syncTopNav();
 
     refreshHeroMetrics();
     loadListings();
