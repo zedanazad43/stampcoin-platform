@@ -1,0 +1,1274 @@
+const API_ROOT = "/";
+const helpers = globalThis.StampbookAppHelpers || globalThis.StampcoinAppHelpers;
+const socialUi = globalThis.StampbookSocialUI;
+const socialState = globalThis.StampbookSocialState;
+const socialNotifications = globalThis.StampbookSocialNotifications;
+const socialEvents = globalThis.StampbookSocialEvents;
+const socialCore = globalThis.StampbookSocialCore;
+
+function apiPath(path) {
+    return `${API_ROOT}${path.replace(/^\//, "")}`;
+}
+
+async function requestJson(path, options = {}) {
+    const response = await fetch(apiPath(path), options);
+    let payload;
+
+    try {
+        payload = await response.json();
+    } catch {
+        payload = { error: "Invalid JSON response" };
+    }
+
+    if (!response.ok) {
+        throw new Error(payload.error || payload.message || `Request failed with ${response.status}`);
+    }
+
+    return payload;
+}
+
+function escapeHtml(value) {
+    return helpers.escapeHtml(value);
+}
+
+function formatNumber(value) {
+    return helpers.formatNumber(value);
+}
+
+function formatDate(value) {
+    if (!value) {
+        return "--";
+    }
+    return new Date(value).toLocaleString();
+}
+
+function setText(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function renderFeedback(targetId, content, isError = false) {
+    const target = document.getElementById(targetId);
+    if (!target) {
+        return;
+    }
+
+    target.innerHTML = `
+        <div class="feedback ${isError ? "error" : "success"}">
+            <strong>${isError ? "Request failed" : "Request completed"}</strong>
+            <span>${escapeHtml(content)}</span>
+        </div>
+    `;
+}
+
+function renderJson(targetId, payload, title) {
+    const target = document.getElementById(targetId);
+    if (!target) {
+        return;
+    }
+
+    const heading = title ? `<div class="feedback success"><strong>${escapeHtml(title)}</strong><span>Live response payload</span></div>` : "";
+    target.innerHTML = `${heading}<div class="json-panel"><pre>${escapeHtml(JSON.stringify(payload, null, 2))}</pre></div>`;
+}
+
+function renderTable(targetId, columns, rows) {
+    const target = document.getElementById(targetId);
+    if (!target) {
+        return;
+    }
+
+    if (!rows || rows.length === 0) {
+        target.innerHTML = '<div class="empty-state">No records returned.</div>';
+        return;
+    }
+
+    const head = columns.map(column => `<th>${escapeHtml(column.label)}</th>`).join("");
+    const body = rows.map(row => {
+        const cells = columns.map(column => `<td>${escapeHtml(column.render(row))}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+    }).join("");
+
+    target.innerHTML = `<div class="table-panel"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+async function refreshHeroMetrics() {
+    try {
+        const [items, transactions, token, health] = await Promise.all([
+            requestJson("api/market/items"),
+            requestJson("api/market/transactions"),
+            requestJson("api/token"),
+            requestJson("health")
+        ]);
+
+        setText("metricListings", formatNumber(Array.isArray(items) ? items.length : 0));
+        setText("metricTransactions", formatNumber(Array.isArray(transactions) ? transactions.length : 0));
+        setText("metricSupply", formatNumber(token.totalSupply));
+        setText("metricVersion", health.version || token.version || "2.0.0");
+
+        const pill = document.getElementById("heroHealthPill");
+        if (pill) {
+            pill.textContent = health.status === "ok" ? "Live" : health.status || "Unknown";
+            pill.classList.remove("status-warn");
+            pill.classList.add(health.status === "ok" ? "status-ok" : "status-warn");
+        }
+    } catch (error) {
+        setText("metricListings", "--");
+        setText("metricTransactions", "--");
+        setText("metricSupply", "--");
+        setText("metricVersion", "--");
+        const pill = document.getElementById("heroHealthPill");
+        if (pill) {
+            pill.textContent = "Degraded";
+            pill.classList.remove("status-ok");
+            pill.classList.add("status-warn");
+        }
+        console.error(error);
+    }
+}
+
+async function loadListings() {
+    const target = document.getElementById("featuredListings");
+    const label = document.getElementById("listingCountLabel");
+
+    if (!target) return;
+
+    target.innerHTML = '<div class="empty-state">Loading featured listings...</div>';
+
+    try {
+        const searchVal = (document.getElementById("filterSearch")?.value || "").trim();
+        const typeVal = document.getElementById("filterType")?.value || "";
+        const statusVal = document.getElementById("filterStatus")?.value || "";
+        const sortVal = document.getElementById("filterSort")?.value || "";
+
+        const qs = helpers.buildListingQuery({
+            search: searchVal,
+            type: typeVal,
+            status: statusVal,
+            sort: sortVal
+        });
+
+        const items = await requestJson(`api/market/items${qs ? `?${qs}` : ""}`);
+        const listings = helpers.filterAndSortListings(Array.isArray(items) ? items : [], {
+            search: searchVal,
+            type: typeVal,
+            status: statusVal,
+            sort: sortVal
+        });
+
+        if (label) label.textContent = `${listings.length} item${listings.length === 1 ? "" : "s"}`;
+
+        if (!listings.length) {
+            target.innerHTML = '<div class="listing-empty">No listings match your filters. Try adjusting them or publish a new item below.</div>';
+            return;
+        }
+
+        target.innerHTML = listings.map(item => helpers.renderListingCard(item)).join("");
+    } catch (error) {
+        if (label) label.textContent = "Unable to load";
+        target.innerHTML = `<div class="listing-empty">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+async function loadMarketTransactions() {
+    try {
+        const data = await requestJson("api/market/transactions");
+        renderTable(
+            "marketTxResult",
+            [
+                { label: "Buyer", render: row => row.buyerId || "--" },
+                { label: "Seller", render: row => row.sellerId || "--" },
+                { label: "Price", render: row => formatNumber(row.price || 0) },
+                { label: "Date", render: row => formatDate(row.timestamp) }
+            ],
+            Array.isArray(data) ? data : []
+        );
+    } catch (error) {
+        renderFeedback("marketTxResult", error.message, true);
+    }
+}
+
+async function loadHealth() {
+    try {
+        const health = await requestJson("health");
+        renderTable(
+            "healthResult",
+            [
+                { label: "Metric", render: row => row.label },
+                { label: "Value", render: row => row.value }
+            ],
+            [
+                { label: "Status", value: health.status },
+                { label: "Service", value: health.service },
+                { label: "Version", value: health.version },
+                { label: "Timestamp", value: formatDate(health.timestamp) }
+            ]
+        );
+    } catch (error) {
+        renderFeedback("healthResult", error.message, true);
+    }
+}
+
+function registerSubmit(formId, handler) {
+    const form = document.getElementById(formId);
+    if (form) {
+        form.addEventListener("submit", handler);
+    }
+}
+
+    // ── Admin token helpers ───────────────────────────────────────────────────────
+    function getAdminToken() {
+        return sessionStorage.getItem("stp_admin_token") || "";
+    }
+
+    function setAdminToken(token) {
+        sessionStorage.setItem("stp_admin_token", token);
+    }
+
+    function clearAdminToken() {
+        sessionStorage.removeItem("stp_admin_token");
+    }
+
+    async function adminRequest(path, options = {}) {
+        const token = getAdminToken();
+        if (!token) {
+            throw new Error("Admin session not active. Enter your sync token first.");
+        }
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            ...(options.headers || {})
+        };
+        return requestJson(path, { ...options, headers });
+    }
+
+    function updateAdminUI(unlocked) {
+        const gate = document.getElementById("adminGate");
+        const console_ = document.getElementById("adminConsole");
+        const pill = document.getElementById("adminStatusPill");
+        if (gate) gate.hidden = unlocked;
+        if (console_) console_.hidden = !unlocked;
+        if (pill) {
+            pill.innerHTML = unlocked
+                ? '<i class="fa-solid fa-unlock"></i> Unlocked'
+                : '<i class="fa-solid fa-lock"></i> Locked';
+            pill.style.background = unlocked ? "rgba(15,143,111,0.14)" : "";
+            pill.style.color = unlocked ? "var(--green)" : "";
+        }
+    }
+
+    // ── Token distribution strip ──────────────────────────────────────────────────
+    async function loadTokenDist() {
+        try {
+            const token = await requestJson("api/token");
+            const summary = helpers.getTokenStripValues(token);
+            setText("distName", summary.name);
+            setText("distSymbol", summary.symbol);
+            setText("distCirculating", summary.circulating);
+            setText("distMax", summary.max);
+            setText("distChain", summary.chain);
+            setText("distDecimals", summary.decimals);
+        } catch {
+            // non-critical — strip stays at defaults
+        }
+    }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const communityPosts = [];
+    let storyItems = [
+        { name: "Lina", tag: "New Ottoman Set" },
+        { name: "Mazin", tag: "Auction Tonight" },
+        { name: "Rama", tag: "NFT Drop" },
+        { name: "Yousef", tag: "Rare Cover" }
+    ];
+    let peopleSuggestions = [
+        { name: "Nora Al Collector", role: "Classic Stamps" },
+        { name: "Kareem Chain", role: "NFT Curator" },
+        { name: "Sahar Philately", role: "Postal Historian" }
+    ];
+    let trendingTopics = ["#Stampbook", "#RareStamp", "#NFTPhilately", "#P2PEscrow", "#STP"];
+    const NOTIFICATION_PAGE_SIZE = 10;
+
+        const THEME_ORDER = ["classic", "pro", "collector"];
+        const THEME_LABELS = {
+                classic: "Classic",
+                pro: "Pro Exchange",
+                collector: "Collector"
+        };
+        const LEFT_RAIL_STORAGE_KEY = "stampbook-left-rail-collapsed";
+        const COMPACT_MODE_STORAGE_KEY = "stampbook-compact-mode";
+    const web3State = {
+        provider: null,
+        signer: null,
+        address: null,
+        config: null,
+        stc: null,
+        nft: null,
+        stcDecimals: 18
+    };
+
+    function renderStories() {
+        const rail = document.getElementById("storyRail");
+        if (!rail) return;
+        if (socialUi && typeof socialUi.renderStoriesHtml === "function") {
+            rail.innerHTML = socialUi.renderStoriesHtml(storyItems, escapeHtml);
+            return;
+        }
+        rail.innerHTML = "";
+    }
+
+    function renderStoriesSkeleton() {
+        const rail = document.getElementById("storyRail");
+        if (!rail) return;
+        rail.innerHTML = Array.from({ length: 5 }, () => `
+            <article class="story-item skeleton-block">
+                <div class="story-overlay"></div>
+                <span class="story-avatar skeleton-pill"></span>
+                <div class="story-copy">
+                    <strong class="skeleton-line"></strong>
+                    <p class="skeleton-line short"></p>
+                </div>
+            </article>
+        `).join("");
+    }
+
+    function renderFeedSkeleton() {
+        const feed = document.getElementById("communityFeed");
+        if (!feed) return;
+        feed.innerHTML = Array.from({ length: 3 }, () => `
+            <article class="feed-post skeleton-post">
+                <div class="feed-head">
+                    <div class="feed-author">
+                        <span class="feed-avatar skeleton-pill"></span>
+                        <span class="feed-author-meta">
+                            <strong class="skeleton-line"></strong>
+                            <small class="skeleton-line short"></small>
+                        </span>
+                    </div>
+                </div>
+                <h4 class="skeleton-line"></h4>
+                <p class="skeleton-line"></p>
+                <p class="skeleton-line short"></p>
+                <div class="feed-stats skeleton-line"></div>
+            </article>
+        `).join("");
+    }
+
+    function setLeftRailCollapsed(collapsed) {
+        const isCollapsed = Boolean(collapsed);
+        document.body.classList.toggle("left-rail-collapsed", isCollapsed);
+        localStorage.setItem(LEFT_RAIL_STORAGE_KEY, isCollapsed ? "1" : "0");
+        const toggle = document.getElementById("leftRailToggleBtn");
+        if (toggle) {
+            toggle.textContent = isCollapsed ? "Show Left Rail" : "Hide Left Rail";
+        }
+    }
+
+    function setCompactMode(enabled) {
+        const isCompact = Boolean(enabled);
+        document.body.classList.toggle("compact-mode", isCompact);
+        localStorage.setItem(COMPACT_MODE_STORAGE_KEY, isCompact ? "1" : "0");
+        const label = document.getElementById("compactToggleLabel");
+        if (label) {
+            label.textContent = isCompact ? "Compact On" : "Compact Off";
+        }
+    }
+
+    function renderPeopleSuggestions() {
+        const list = document.getElementById("peopleYouMayKnow");
+        if (!list) return;
+        if (socialUi && typeof socialUi.renderPeopleSuggestionsHtml === "function") {
+            list.innerHTML = socialUi.renderPeopleSuggestionsHtml(peopleSuggestions, escapeHtml);
+            return;
+        }
+        list.innerHTML = "";
+    }
+
+    function renderTrendingTopics() {
+        const ticker = document.getElementById("trendingTicker");
+        if (!ticker) return;
+        ticker.innerHTML = trendingTopics.map(topic => `<span class="trending-pill">${escapeHtml(topic)}</span>`).join("");
+    }
+
+    function renderCommunityFeed() {
+        const feed = document.getElementById("communityFeed");
+        if (!feed) return;
+
+        if (!communityPosts.length) {
+            feed.innerHTML = '<div class="empty-state">No posts yet. Be the first to publish your stamp story.</div>';
+            return;
+        }
+
+        if (socialUi && typeof socialUi.renderCommunityFeedHtml === "function") {
+            feed.innerHTML = socialUi.renderCommunityFeedHtml(communityPosts, { escapeHtml, formatDate });
+            return;
+        }
+
+        feed.innerHTML = "";
+    }
+
+    function setTheme(themeName) {
+        const normalized = THEME_ORDER.includes(themeName) ? themeName : "classic";
+        document.body.setAttribute("data-theme", normalized);
+        localStorage.setItem("stampbook-theme", normalized);
+        const label = document.getElementById("themeToggleLabel");
+        if (label) {
+            label.textContent = THEME_LABELS[normalized] || "Classic";
+        }
+    }
+
+    function nextTheme(currentTheme) {
+        const currentIndex = THEME_ORDER.indexOf(currentTheme);
+        if (currentIndex < 0) {
+            return THEME_ORDER[0];
+        }
+        return THEME_ORDER[(currentIndex + 1) % THEME_ORDER.length];
+    }
+
+    function getPostByElementTarget(target) {
+        const postEl = target.closest(".feed-post");
+        if (!postEl) return null;
+        const postId = postEl.getAttribute("data-post-id");
+        return communityPosts.find(post => String(post.id || post.createdAt || post.title) === String(postId));
+    }
+
+    async function loadCommunityPosts(options = {}) {
+        const { showSkeleton = true } = options;
+        if (showSkeleton) {
+            renderFeedSkeleton();
+        }
+        try {
+            const rows = await requestJson("api/community/posts");
+            communityPosts.length = 0;
+            if (Array.isArray(rows)) {
+                communityPosts.push(...rows);
+            }
+            renderCommunityFeed();
+        } catch {
+            renderCommunityFeed();
+        }
+    }
+
+    async function loadSocialBootstrap() {
+        renderStoriesSkeleton();
+        try {
+            const payload = await requestJson("api/social/bootstrap");
+            storyItems = Array.isArray(payload.stories) ? payload.stories : storyItems;
+            peopleSuggestions = Array.isArray(payload.people) ? payload.people : peopleSuggestions;
+            trendingTopics = Array.isArray(payload.trending) ? payload.trending : trendingTopics;
+        } catch {
+            // Keep defaults if bootstrap is unavailable
+        }
+        renderStories();
+        renderPeopleSuggestions();
+        renderTrendingTopics();
+    }
+
+    function getActiveUserId() {
+        return document.getElementById("profileUserName")?.textContent || "stampbook-user";
+    }
+
+    function renderGroupsList(groups) {
+        const list = document.getElementById("groupsList");
+        const select = document.getElementById("groupPostGroupId");
+        const openGroup = document.getElementById("openGroupViewBtn");
+        if (!list || !select) return;
+
+        const rows = Array.isArray(groups) ? groups : [];
+        if (socialUi && typeof socialUi.renderGroupsListHtml === "function") {
+            list.innerHTML = socialUi.renderGroupsListHtml(rows, escapeHtml);
+            select.innerHTML = socialUi.renderGroupOptionsHtml(rows, escapeHtml);
+        } else {
+            list.innerHTML = "";
+            select.innerHTML = '<option value="">No groups</option>';
+        }
+
+        if (openGroup && rows.length) {
+            openGroup.setAttribute("href", `#group/${encodeURIComponent(rows[0].id)}`);
+        }
+    }
+
+    function renderNotificationBoard(payload, options = {}) {
+        const board = document.getElementById("notificationBoard");
+        const badge = document.getElementById("notificationCountBadge");
+        const filterButtons = Array.from(document.querySelectorAll("#notificationFilters [data-notification-filter]"));
+        const notificationFilter = options.notificationFilter
+            ?? socialRuntime?.getNotificationFilter?.()
+            ?? "all";
+        const notificationOffset = options.notificationOffset
+            ?? socialRuntime?.getNotificationOffset?.()
+            ?? 0;
+        const notificationPageSize = options.notificationPageSize ?? NOTIFICATION_PAGE_SIZE;
+        if (!board || !badge) return;
+
+        if (socialNotifications && typeof socialNotifications.renderNotificationBoard === "function") {
+            socialNotifications.renderNotificationBoard(payload, {
+                board,
+                badge,
+                filterButtons,
+                notificationFilter,
+                notificationOffset,
+                notificationPageSize,
+                escapeHtml,
+                formatDate
+            });
+            return;
+        }
+
+        const unread = Number(payload?.unread || 0);
+        badge.textContent = String(unread);
+        badge.hidden = unread <= 0;
+        board.innerHTML = "";
+    }
+
+    function renderFriendsBoard(payload) {
+        const board = document.getElementById("friendsBoard");
+        if (!board) return;
+        if (socialUi && typeof socialUi.renderFriendsBoardHtml === "function") {
+            board.innerHTML = socialUi.renderFriendsBoardHtml(payload, escapeHtml);
+            return;
+        }
+        board.innerHTML = "";
+    }
+
+    const socialRuntime = (socialCore && typeof socialCore.createSocialRuntime === "function")
+        ? socialCore.createSocialRuntime({
+            requestJson,
+            escapeHtml,
+            formatDate,
+            socialState,
+            getSelectedGroupId: () => document.getElementById("groupPostGroupId")?.value || "",
+            loadSocialBootstrap,
+            loadCommunityPosts,
+            renderGroupsList,
+            renderFriendsBoard,
+            renderNotificationBoard,
+            getActiveUserId,
+            setTheme,
+            setCompactMode,
+            setLeftRailCollapsed,
+            compactModeStorageKey: COMPACT_MODE_STORAGE_KEY,
+            leftRailStorageKey: LEFT_RAIL_STORAGE_KEY,
+            notificationPageSize: NOTIFICATION_PAGE_SIZE,
+            initialNotificationFilter: "all",
+            initialNotificationCache: { unread: 0, total: 0, notifications: [] },
+            notificationPollIntervalMs: 30000
+        })
+        : null;
+
+    const loadGroups = (...args) => socialRuntime?.loadGroups?.(...args);
+    const loadFriendsBoard = (...args) => socialRuntime?.loadFriendsBoard?.(...args);
+    const loadNotifications = (...args) => socialRuntime?.loadNotifications?.(...args);
+
+    function appendAiMessage(text, role) {
+        const log = document.getElementById("aiLog");
+        if (!log) return;
+        const item = document.createElement("div");
+        item.className = `ai-msg ${role}`;
+        item.textContent = text;
+        log.appendChild(item);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function aiReplyFor(text) {
+        const input = text.toLowerCase();
+        if (input.includes("wallet") || input.includes("محفظ")) {
+            return "For wallet issues: verify user ID, check transfer history in Wallet Lab, and confirm balance before purchase.";
+        }
+        if (input.includes("nft") || input.includes("mint") || input.includes("سك")) {
+            return "NFT mint flow: upload JPG, choose fee currency, review user/platform split, then confirm metadata and ownership.";
+        }
+        if (input.includes("payment") || input.includes("دفع") || input.includes("fiat")) {
+            return "Payment options support STC and selected crypto rails. Fiat gateway can be integrated through a licensed PSP.";
+        }
+        if (input.includes("problem") || input.includes("issue") || input.includes("مشك")) {
+            return "Please provide transaction ID, user ID, and timestamp. I can guide recovery and escalation steps.";
+        }
+        return "I can help with wallet operations, NFT minting, purchases, trading flow, and p2p escrow safety checks.";
+    }
+
+    async function loadAbi(contractName) {
+        const response = await fetch(apiPath(`abi/${contractName}.abi.json`));
+        if (!response.ok) {
+            throw new Error(`ABI not found for ${contractName}`);
+        }
+        return response.json();
+    }
+
+    function ensureWeb3Contracts() {
+        if (!web3State.signer || !web3State.stc || !web3State.nft) {
+            throw new Error("Connect Web3 wallet first.");
+        }
+    }
+
+    registerSubmit("createWalletForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("userId").value.trim();
+        const userName = document.getElementById("userName").value.trim();
+
+        try {
+            const payload = await requestJson("api/wallet/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, userName })
+            });
+            renderJson("createWalletResult", payload, "Wallet created successfully");
+            event.target.reset();
+            refreshHeroMetrics();
+        } catch (error) {
+            renderFeedback("createWalletResult", error.message, true);
+        }
+    });
+
+    registerSubmit("viewWalletForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("viewUserId").value.trim();
+
+        try {
+            const payload = await requestJson(`api/wallet/${encodeURIComponent(userId)}`);
+            renderJson("viewWalletResult", payload, "Wallet details");
+        } catch (error) {
+            renderFeedback("viewWalletResult", error.message, true);
+        }
+    });
+
+    registerSubmit("transferForm", async event => {
+        event.preventDefault();
+        const fromUserId = document.getElementById("fromUserId").value.trim();
+        const toUserId = document.getElementById("toUserId").value.trim();
+        const amount = Number(document.getElementById("transferAmount").value);
+
+        try {
+            const payload = await requestJson("api/wallet/transfer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fromUserId, toUserId, amount })
+            });
+            renderJson("transferResult", payload, "Transfer completed");
+            event.target.reset();
+            refreshHeroMetrics();
+        } catch (error) {
+            renderFeedback("transferResult", error.message, true);
+        }
+    });
+
+    registerSubmit("transactionsForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("txUserId").value.trim();
+
+        try {
+            const payload = await requestJson(`api/wallet/${encodeURIComponent(userId)}/transactions`);
+            renderTable(
+                "transactionsResult",
+                [
+                    { label: "From", render: row => row.from || "--" },
+                    { label: "To", render: row => row.to || "--" },
+                    { label: "Amount", render: row => formatNumber(row.amount || 0) },
+                    { label: "Status", render: row => row.status || "--" },
+                    { label: "Date", render: row => formatDate(row.timestamp) }
+                ],
+                Array.isArray(payload) ? payload : []
+            );
+        } catch (error) {
+            renderFeedback("transactionsResult", error.message, true);
+        }
+    });
+
+    registerSubmit("listItemForm", async event => {
+        event.preventDefault();
+        const sellerId = document.getElementById("sellerId").value.trim();
+        const name = document.getElementById("itemName").value.trim();
+        const price = Number(document.getElementById("itemPrice").value);
+        const type = document.getElementById("itemType").value.trim();
+        const description = document.getElementById("itemDesc").value.trim();
+
+        try {
+            const payload = await requestJson("api/market/items", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sellerId, name, price, type, description })
+            });
+            renderJson("listItemResult", payload, "Listing published");
+            event.target.reset();
+            await loadListings();
+            refreshHeroMetrics();
+        } catch (error) {
+            renderFeedback("listItemResult", error.message, true);
+        }
+    });
+
+    registerSubmit("buyItemForm", async event => {
+        event.preventDefault();
+        const itemId = document.getElementById("buyItemId").value.trim();
+        const buyerId = document.getElementById("buyerId").value.trim();
+
+        try {
+            const payload = await requestJson(`api/market/items/${encodeURIComponent(itemId)}/buy`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ buyerId })
+            });
+            renderJson("buyItemResult", payload, "Purchase completed");
+            event.target.reset();
+            await Promise.all([loadListings(), loadMarketTransactions(), refreshHeroMetrics()]);
+        } catch (error) {
+            renderFeedback("buyItemResult", error.message, true);
+        }
+    });
+
+    registerSubmit("balanceForm", async event => {
+        event.preventDefault();
+        const address = document.getElementById("balanceAddress").value.trim();
+
+        try {
+            const payload = await requestJson(`api/blockchain/balance/${encodeURIComponent(address)}`);
+            renderJson("balanceResult", payload, "Address balance");
+        } catch (error) {
+            renderFeedback("balanceResult", error.message, true);
+        }
+    });
+
+    document.getElementById("refreshListingsBtn")?.addEventListener("click", loadListings);
+    document.getElementById("marketTxBtn")?.addEventListener("click", loadMarketTransactions);
+    document.getElementById("healthBtn")?.addEventListener("click", loadHealth);
+
+    document.getElementById("getTokenBtn")?.addEventListener("click", async () => {
+        try {
+            renderJson("tokenResult", await requestJson("api/token"), "Token profile");
+        } catch (error) {
+            renderFeedback("tokenResult", error.message, true);
+        }
+    });
+
+    document.getElementById("getBlockchainBtn")?.addEventListener("click", async () => {
+        try {
+            renderJson("blockchainResult", await requestJson("api/blockchain/info"), "Blockchain information");
+        } catch (error) {
+            renderFeedback("blockchainResult", error.message, true);
+        }
+    });
+
+    document.getElementById("getSupplyBtn")?.addEventListener("click", async () => {
+        try {
+            renderJson("supplyResult", await requestJson("api/blockchain/supply"), "Supply information");
+        } catch (error) {
+            renderFeedback("supplyResult", error.message, true);
+        }
+    });
+
+    // ── Filter bar live updates ───────────────────────────────────────────────
+    ["filterType", "filterStatus", "filterSort"].forEach(id => {
+        document.getElementById(id)?.addEventListener("change", loadListings);
+    });
+    document.getElementById("filterSearch")?.addEventListener("input", () => {
+        clearTimeout(window._filterDebounce);
+        window._filterDebounce = setTimeout(loadListings, 260);
+    });
+
+    // ── Admin unlock / lock ──────────────────────────────────────────────────
+    registerSubmit("adminUnlockForm", async event => {
+        event.preventDefault();
+        const token = document.getElementById("adminTokenInput").value.trim();
+        if (!token) {
+            renderFeedback("adminUnlockResult", "Token cannot be empty.", true);
+            return;
+        }
+        try {
+            const res = await fetch(apiPath("api/wallets"), {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                throw new Error("Token rejected");
+            }
+            setAdminToken(token);
+            updateAdminUI(true);
+            event.target.reset();
+        } catch {
+            renderFeedback("adminUnlockResult", "Token rejected — check your SYNC_TOKEN value.", true);
+        }
+    });
+
+    document.getElementById("adminLockBtn")?.addEventListener("click", () => {
+        clearAdminToken();
+        updateAdminUI(false);
+    });
+
+    if (getAdminToken()) {
+        updateAdminUI(true);
+    }
+
+    // ── Admin: all wallets ────────────────────────────────────────────────────
+    document.getElementById("adminAllWalletsBtn")?.addEventListener("click", async () => {
+        try {
+            const data = await adminRequest("api/wallets");
+            renderTable(
+                "adminWalletsResult",
+                [
+                    { label: "User ID", render: r => r.userId || "--" },
+                    { label: "Name", render: r => r.userName || "--" },
+                    { label: "Balance", render: r => formatNumber(r.balance || 0) },
+                    { label: "Stamps", render: r => Array.isArray(r.stamps) ? String(r.stamps.length) : "0" }
+                ],
+                Array.isArray(data) ? data : []
+            );
+        } catch (error) {
+            renderFeedback("adminWalletsResult", error.message, true);
+        }
+    });
+
+    // ── Admin: top-up ─────────────────────────────────────────────────────────
+    registerSubmit("adminTopupForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("adminTopupUserId").value.trim();
+        const amount = Number(document.getElementById("adminTopupAmount").value);
+        try {
+            const payload = await adminRequest(`api/wallet/${encodeURIComponent(userId)}/topup`, {
+                method: "POST",
+                body: JSON.stringify({ amount })
+            });
+            renderJson("adminTopupResult", payload, "Top-up applied");
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("adminTopupResult", error.message, true);
+        }
+    });
+
+    // ── Admin: mint tokens ────────────────────────────────────────────────────
+    registerSubmit("adminMintForm", async event => {
+        event.preventDefault();
+        const to = document.getElementById("adminMintTo").value.trim();
+        const amount = Number(document.getElementById("adminMintAmount").value);
+        try {
+            const payload = await adminRequest("api/blockchain/mint", {
+                method: "POST",
+                body: JSON.stringify(helpers.buildMintPayload(to, amount))
+            });
+            renderJson("adminMintResult", payload, "Mint completed");
+            event.target.reset();
+            refreshHeroMetrics();
+        } catch (error) {
+            renderFeedback("adminMintResult", error.message, true);
+        }
+    });
+
+    // ── Admin: mint events ────────────────────────────────────────────────────
+    document.getElementById("adminMintEventsBtn")?.addEventListener("click", async () => {
+        try {
+            const data = await adminRequest("api/blockchain/mint/events");
+            renderTable(
+                "adminMintEventsResult",
+                [
+                    { label: "To", render: r => r.to || "--" },
+                    { label: "Amount", render: r => formatNumber(r.amount || 0) },
+                    { label: "Date", render: r => formatDate(r.timestamp) }
+                ],
+                Array.isArray(data) ? data : []
+            );
+        } catch (error) {
+            renderFeedback("adminMintEventsResult", error.message, true);
+        }
+    });
+
+    // ── Admin: add stamp ──────────────────────────────────────────────────────
+    registerSubmit("adminAddStampForm", async event => {
+        event.preventDefault();
+        const userId = document.getElementById("adminStampUserId").value.trim();
+        const stampId = document.getElementById("adminStampId").value.trim();
+        const name = document.getElementById("adminStampName").value.trim();
+        try {
+            const payload = await adminRequest(`api/wallet/${encodeURIComponent(userId)}/stamps`, {
+                method: "POST",
+                body: JSON.stringify({ stampId, name })
+            });
+            renderJson("adminAddStampResult", payload, "Stamp added to wallet");
+            event.target.reset();
+            refreshHeroMetrics();
+        } catch (error) {
+            renderFeedback("adminAddStampResult", error.message, true);
+        }
+    });
+
+    registerSubmit("culturePostForm", async event => {
+        event.preventDefault();
+        const title = document.getElementById("cultureTitle")?.value.trim();
+        const imageUrl = document.getElementById("cultureImage")?.value.trim();
+        const body = document.getElementById("cultureBody")?.value.trim();
+
+        try {
+            await requestJson("api/community/posts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title,
+                    body,
+                    imageUrl,
+                    authorId: document.getElementById("profileUserName")?.textContent || "collector-pro"
+                })
+            });
+            await loadCommunityPosts({ showSkeleton: false });
+            renderFeedback("culturePostResult", "Post published to community feed.", false);
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("culturePostResult", error.message, true);
+        }
+    });
+
+    registerSubmit("stampbookComposerForm", async event => {
+        event.preventDefault();
+        const body = document.getElementById("sbPostText")?.value.trim();
+        const imageUrl = document.getElementById("sbPostImage")?.value.trim();
+        const authorId = document.getElementById("profileUserName")?.textContent || "stampbook-user";
+
+        try {
+            await requestJson("api/community/posts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: "Stampbook post",
+                    body,
+                    imageUrl,
+                    authorId
+                })
+            });
+            await loadCommunityPosts({ showSkeleton: false });
+            renderFeedback("stampbookComposerResult", "Published to Stampbook feed.", false);
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("stampbookComposerResult", error.message, true);
+        }
+    });
+
+    if (socialEvents && typeof socialEvents.bindSocialEventHandlers === "function") {
+        socialEvents.bindSocialEventHandlers({
+            requestJson,
+            registerSubmit,
+            renderFeedback,
+            renderJson,
+            getActiveUserId,
+            getPostByElementTarget,
+            loadCommunityPosts,
+            loadFriendsBoard,
+            loadGroups,
+            loadNotifications,
+            renderNotificationBoard: payload => socialRuntime?.renderNotificationBoard?.(payload) || renderNotificationBoard(payload),
+            getNotificationFilter: () => socialRuntime?.getNotificationFilter?.() || "all",
+            setNotificationFilter: value => socialRuntime?.setNotificationFilter?.(value),
+            getNotificationCache: () => socialRuntime?.getNotificationCache?.() || { unread: 0, total: 0, notifications: [] },
+            getNotificationOffset: () => socialRuntime?.getNotificationOffset?.() || 0,
+            setNotificationOffset: value => socialRuntime?.setNotificationOffset?.(value),
+            notificationPageSize: NOTIFICATION_PAGE_SIZE,
+            setSocialView: viewName => socialRuntime?.setSocialView(viewName)
+        });
+    }
+
+    registerSubmit("mintJpgForm", async event => {
+        event.preventDefault();
+        const ownerId = document.getElementById("mintOwnerId")?.value.trim();
+        const stampTitle = document.getElementById("mintStampTitle")?.value.trim();
+        const feeCurrency = document.getElementById("mintFeeCurrency")?.value;
+        const feeAmount = Number(document.getElementById("mintFeeAmount")?.value || 0);
+        const fileInput = document.getElementById("mintJpgFile");
+        const file = fileInput?.files?.[0];
+
+        if (!file) {
+            renderFeedback("mintJpgResult", "Please select a JPG file.", true);
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append("ownerId", ownerId || "unknown");
+            formData.append("stampTitle", stampTitle || "Untitled stamp");
+            formData.append("feeCurrency", feeCurrency || "STC");
+            formData.append("feeAmount", String(feeAmount || 0));
+            formData.append("stampImage", file);
+
+            const response = await fetch(apiPath("api/nft/mint-drafts"), {
+                method: "POST",
+                body: formData
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to create NFT draft");
+            }
+
+            renderJson("mintJpgResult", payload, "NFT draft generated");
+
+            const preview = document.getElementById("mintNftPreview");
+            if (preview) {
+                preview.innerHTML = `
+                    <article class="nft-preview-card">
+                        <img src="${escapeHtml(payload.imagePath)}" alt="Preview ${escapeHtml(payload.stampTitle)}">
+                        <h4>${escapeHtml(payload.stampTitle)}</h4>
+                        <p>Owner: ${escapeHtml(payload.ownerId)}</p>
+                        <p>Mint fee: ${escapeHtml(String(payload.feeAmount))} ${escapeHtml(payload.feeCurrency)}</p>
+                        <p>User share: ${escapeHtml(String(payload.split.userPercent))}% | Platform fee: ${escapeHtml(String(payload.split.platformPercent))}%</p>
+                    </article>
+                `;
+            }
+
+            setText("splitUserShare", `${payload.split.userPercent}%`);
+            setText("splitPlatformShare", `${payload.split.platformPercent}%`);
+        } catch (error) {
+            renderFeedback("mintJpgResult", error.message, true);
+        }
+    });
+
+    registerSubmit("p2pSaleForm", async event => {
+        event.preventDefault();
+        const seller = document.getElementById("p2pSeller")?.value.trim();
+        const stamp = document.getElementById("p2pStamp")?.value.trim();
+        const price = Number(document.getElementById("p2pPrice")?.value || 0);
+        try {
+            const payload = await requestJson("api/p2p/listings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sellerId: seller, stampDetails: stamp, askPriceUsd: price })
+            });
+            renderJson("p2pSaleResult", payload, "Escrow listing draft");
+            renderFeedback("p2pEscrowResult", "Escrow policy applied: funds lock, shipment proof, confirmation release.", false);
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("p2pSaleResult", error.message, true);
+        }
+    });
+
+    document.getElementById("openExchangeBtn")?.addEventListener("click", () => {
+        renderFeedback("exchangeResult", "Exchange panel blueprint loaded: orderbook, limit/market orders, custody checks.", false);
+    });
+
+    document.getElementById("openDexBtn")?.addEventListener("click", () => {
+        renderFeedback("dexResult", "DEX blueprint loaded: wallet connect, token approval, swap route, slippage control.", false);
+    });
+
+    document.getElementById("openFiatBtn")?.addEventListener("click", () => {
+        renderFeedback("fiatResult", "Fiat deposit blueprint loaded: KYC, payment gateway, treasury confirmation.", false);
+    });
+
+    document.getElementById("connectWeb3Btn")?.addEventListener("click", async () => {
+        try {
+            if (!window.ethereum || !window.ethers) {
+                throw new Error("MetaMask or ethers.js is not available in this browser.");
+            }
+
+            const config = await requestJson("api/web3/config");
+            const provider = new window.ethers.providers.Web3Provider(window.ethereum, "any");
+            await provider.send("eth_requestAccounts", []);
+            const signer = provider.getSigner();
+            const address = await signer.getAddress();
+            const network = await provider.getNetwork();
+
+            if (!window.ethers.utils.isAddress(config.stcContractAddress) || !window.ethers.utils.isAddress(config.nftContractAddress)) {
+                throw new Error("Invalid STC/NFT contract addresses in backend config.");
+            }
+
+            const [stcAbi, nftAbi] = await Promise.all([
+                loadAbi("StampCoinToken"),
+                loadAbi("StampNFT")
+            ]);
+
+            const [stcCode, nftCode] = await Promise.all([
+                provider.getCode(config.stcContractAddress),
+                provider.getCode(config.nftContractAddress)
+            ]);
+            if (stcCode === "0x" || nftCode === "0x") {
+                throw new Error("Configured contract addresses are not deployed on the connected network yet.");
+            }
+
+            const stc = new window.ethers.Contract(config.stcContractAddress, stcAbi, signer);
+            const nft = new window.ethers.Contract(config.nftContractAddress, nftAbi, signer);
+
+            let stcDecimals = 18;
+            try {
+                stcDecimals = Number(await stc.decimals());
+            } catch {
+                stcDecimals = 18;
+            }
+
+            web3State.provider = provider;
+            web3State.signer = signer;
+            web3State.address = address;
+            web3State.config = config;
+            web3State.stc = stc;
+            web3State.nft = nft;
+            web3State.stcDecimals = stcDecimals;
+
+            renderJson("web3Result", {
+                walletAddress: address,
+                connectedChainId: `0x${network.chainId.toString(16)}`,
+                networkName: network.name,
+                expectedChainId: config.chainId,
+                stcContractAddress: config.stcContractAddress,
+                nftContractAddress: config.nftContractAddress,
+                stcDecimals,
+                explorer: config.explorerBase
+            }, "Web3 wallet connected");
+
+            setText("profileWallet", `${address.slice(0, 6)}...${address.slice(-4)}`);
+            setText("profileVerification", "Wallet Connected");
+        } catch (error) {
+            renderFeedback("web3Result", error.message, true);
+        }
+    });
+
+    registerSubmit("stcBalanceForm", async event => {
+        event.preventDefault();
+        try {
+            ensureWeb3Contracts();
+            const inputAddress = document.getElementById("web3BalanceAddress")?.value.trim();
+            const targetAddress = inputAddress || web3State.address;
+            if (!window.ethers.utils.isAddress(targetAddress)) {
+                throw new Error("Invalid wallet address.");
+            }
+
+            const raw = await web3State.stc.balanceOf(targetAddress);
+            const formatted = window.ethers.utils.formatUnits(raw, web3State.stcDecimals);
+            renderJson("web3BalanceResult", {
+                address: targetAddress,
+                balanceRaw: raw.toString(),
+                balanceFormatted: formatted,
+                symbol: "STC"
+            }, "STC balance");
+        } catch (error) {
+            renderFeedback("web3BalanceResult", error.message, true);
+        }
+    });
+
+    registerSubmit("approveStcForm", async event => {
+        event.preventDefault();
+        try {
+            ensureWeb3Contracts();
+            const spender = document.getElementById("approveSpender")?.value.trim();
+            const amount = document.getElementById("approveAmount")?.value.trim();
+            if (!window.ethers.utils.isAddress(spender)) {
+                throw new Error("Invalid spender address.");
+            }
+            if (!amount) {
+                throw new Error("Amount is required.");
+            }
+            const parsedAmount = window.ethers.utils.parseUnits(amount, web3State.stcDecimals);
+            const tx = await web3State.stc.approve(spender, parsedAmount);
+            const receipt = await tx.wait();
+
+            renderJson("approveResult", {
+                spender,
+                amount,
+                txHash: tx.hash,
+                blockNumber: receipt.blockNumber,
+                explorer: `${web3State.config.explorerBase}/tx/${tx.hash}`
+            }, "STC approval submitted");
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("approveResult", error.message, true);
+        }
+    });
+
+    registerSubmit("mintOnchainForm", async event => {
+        event.preventDefault();
+        try {
+            ensureWeb3Contracts();
+            const to = document.getElementById("mintToAddress")?.value.trim();
+            const metadataUri = document.getElementById("mintMetadataUri")?.value.trim();
+            const feeEth = document.getElementById("mintFeeEth")?.value.trim();
+
+            if (!window.ethers.utils.isAddress(to)) {
+                throw new Error("Invalid recipient address.");
+            }
+            if (!metadataUri) {
+                throw new Error("Metadata URI is required.");
+            }
+
+            let valueWei;
+            if (feeEth) {
+                valueWei = window.ethers.utils.parseEther(feeEth);
+            } else {
+                valueWei = await web3State.nft.mintFee();
+            }
+
+            const tx = await web3State.nft.mintStamp(to, metadataUri, { value: valueWei });
+            const receipt = await tx.wait();
+
+            renderJson("mintOnchainResult", {
+                to,
+                metadataUri,
+                feeWei: valueWei.toString(),
+                txHash: tx.hash,
+                blockNumber: receipt.blockNumber,
+                explorer: `${web3State.config.explorerBase}/tx/${tx.hash}`
+            }, "NFT mint transaction confirmed");
+            event.target.reset();
+        } catch (error) {
+            renderFeedback("mintOnchainResult", error.message, true);
+        }
+    });
+
+    document.getElementById("aiToggleBtn")?.addEventListener("click", () => {
+        const panel = document.getElementById("aiPanel");
+        if (!panel) return;
+        panel.hidden = !panel.hidden;
+    });
+
+    document.getElementById("themeToggleBtn")?.addEventListener("click", () => {
+        const activeTheme = document.body.getAttribute("data-theme") || "classic";
+        setTheme(nextTheme(activeTheme));
+    });
+
+    document.getElementById("compactToggleBtn")?.addEventListener("click", () => {
+        const enabled = document.body.classList.contains("compact-mode");
+        setCompactMode(!enabled);
+    });
+
+    document.getElementById("leftRailToggleBtn")?.addEventListener("click", () => {
+        const collapsed = document.body.classList.contains("left-rail-collapsed");
+        setLeftRailCollapsed(!collapsed);
+    });
+
+    document.getElementById("aiCloseBtn")?.addEventListener("click", () => {
+        const panel = document.getElementById("aiPanel");
+        if (panel) panel.hidden = true;
+    });
+
+    document.getElementById("aiContacts")?.addEventListener("click", event => {
+        const contact = event.target.closest("button[data-ai-contact]");
+        if (!contact) return;
+        const topic = contact.getAttribute("data-ai-contact") || "support";
+        const panel = document.getElementById("aiPanel");
+        const input = document.getElementById("aiInput");
+        if (panel) {
+            panel.hidden = false;
+        }
+        if (input) {
+            input.value = `I need help with ${topic}`;
+            input.focus();
+        }
+    });
+
+    registerSubmit("aiForm", async event => {
+        event.preventDefault();
+        const input = document.getElementById("aiInput");
+        const text = input?.value.trim();
+        if (!text) return;
+
+        appendAiMessage(text, "user");
+        const reply = aiReplyFor(text);
+        setTimeout(() => appendAiMessage(reply, "bot"), 180);
+        event.target.reset();
+    });
+
+    if (socialRuntime && typeof socialRuntime.initializeSocialExperience === "function") {
+        socialRuntime.initializeSocialExperience();
+    } else {
+        loadSocialBootstrap();
+        loadCommunityPosts();
+        setTheme(localStorage.getItem("stampbook-theme") || "classic");
+        setCompactMode(localStorage.getItem(COMPACT_MODE_STORAGE_KEY) === "1");
+        setLeftRailCollapsed(localStorage.getItem(LEFT_RAIL_STORAGE_KEY) === "1");
+    }
+
+    refreshHeroMetrics();
+    loadListings();
+    loadHealth();
+    loadTokenDist();
+
+});
