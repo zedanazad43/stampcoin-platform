@@ -26,6 +26,44 @@ function validateUserId(userId) {
 }
 
 /**
+ * Check if an object key is potentially dangerous for prototype pollution.
+ * This is an internal safeguard in addition to validateUserId.
+ * @param {string} key
+ * @returns {boolean}
+ */
+function isDangerousKey(key) {
+  return key === '__proto__' || key === 'constructor' || key === 'prototype';
+}
+
+/**
+ * Safely get a wallet from the wallets store using a userId key.
+ * Prevents accesses that could affect Object.prototype.
+ * @param {object} store
+ * @param {string} userId
+ * @returns {object|undefined}
+ */
+function getWalletFromStore(store, userId) {
+  if (isDangerousKey(userId)) {
+    throw new Error('Invalid userId');
+  }
+  return store[userId];
+}
+
+/**
+ * Safely set a wallet in the wallets store using a userId key.
+ * Prevents writes that could affect Object.prototype.
+ * @param {object} store
+ * @param {string} userId
+ * @param {object} walletObj
+ */
+function setWalletInStore(store, userId, walletObj) {
+  if (isDangerousKey(userId)) {
+    throw new Error('Invalid userId');
+  }
+  store[userId] = walletObj;
+}
+
+/**
  * Initialize wallet storage files if they don't exist
  */
 function initializeStorage() {
@@ -185,7 +223,7 @@ function updateBalance(userId, amount) {
 function addStamp(userId, stamp) {
   validateUserId(userId);
   const wallets = readWallets();
-  const wallet = wallets[userId];
+  const wallet = getWalletFromStore(wallets, userId);
 
   if (!wallet) {
     throw new Error('Wallet not found');
@@ -200,7 +238,7 @@ function addStamp(userId, stamp) {
   wallet.stamps.push(stampWithId);
   wallet.updatedAt = new Date().toISOString();
 
-  wallets[userId] = wallet;
+  setWalletInStore(wallets, userId, wallet);
   writeWallets(wallets);
 
   return wallet;
@@ -222,8 +260,8 @@ function transfer(fromUserId, toUserId, amount = 0, stampId = null) {
   }
 
   const wallets = readWallets();
-  const fromWallet = wallets[fromUserId];
-  const toWallet = wallets[toUserId];
+  const fromWallet = getWalletFromStore(wallets, fromUserId);
+  const toWallet = getWalletFromStore(wallets, toUserId);
 
   if (!fromWallet || !toWallet) {
     throw new Error('One or both wallets not found');
@@ -255,8 +293,8 @@ function transfer(fromUserId, toUserId, amount = 0, stampId = null) {
   fromWallet.updatedAt = timestamp;
   toWallet.updatedAt = timestamp;
 
-  wallets[fromUserId] = fromWallet;
-  wallets[toUserId] = toWallet;
+  setWalletInStore(wallets, fromUserId, fromWallet);
+  setWalletInStore(wallets, toUserId, toWallet);
   writeWallets(wallets);
 
   const transaction = {
