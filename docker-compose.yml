@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - type=registry,ref=stampcoin-platform:latest
+    container_name: stampcoin-platform
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - SYNC_TOKEN=${SYNC_TOKEN:-dev-token-12345}
+      - STP_CONTRACT_ADDRESS=${STP_CONTRACT_ADDRESS:-}
+      - ALLOWED_ORIGINS=http://localhost:8080,http://localhost:3000,http://127.0.0.1:8080,http://127.0.0.1:3000
+    volumes:
+      - ./server.js:/app/server.js
+      - ./wallet.js:/app/wallet.js
+      - ./market.js:/app/market.js
+      - ./blockchain.js:/app/blockchain.js
+      - ./public:/app/public
+      - app-data:/app/data
+      - app-wallets:/app
+      - app-market:/app
+      - app-blockchain:/app
+    restart: unless-stopped
+    networks:
+      - stampcoin-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  stampcoin-network:
+    driver: bridge
+
+volumes:
+  app-data:
+  app-wallets:
+  app-market:
+  app-blockchain:

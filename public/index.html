@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stampbook (STP) | Social Collectibles Network</title>
+    <meta name="description" content="Stampbook (STP) is a social network for collectors with live wallet infrastructure, NFT minting, P2P escrow, and on-chain settlement.">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <link rel="canonical" href="https://stampcoin-platform.fly.dev/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://stampcoin-platform.fly.dev/">
+    <meta property="og:title" content="Stampbook (STP) | Social Collectibles Network">
+    <meta property="og:description" content="A Facebook-like social layer for collectors: stories, feed, groups, wallets, NFTs, and P2P escrow in one live platform.">
+    <meta property="og:image" content="https://stampcoin-platform.fly.dev/og-cover.png">
+    <meta property="og:image:alt" content="Stampbook social collectibles dashboard">
+    <meta property="og:site_name" content="Stampbook">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Stampbook (STP) | Social Collectibles Network">
+    <meta name="twitter:description" content="Stories, feed, creator profiles, NFTs, and tokenized trading for collectors.">
+    <meta name="twitter:image" content="https://stampcoin-platform.fly.dev/og-cover.png">
+    <meta name="twitter:image:alt" content="Stampbook social collectibles dashboard">
+
+    <!-- Structured Data: Organization -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Stampbook",
+        "url": "https://stampcoin-platform.fly.dev/",
+        "description": "Digital collectibles marketplace and blockchain infrastructure for trading stamps, collectibles, and limited-edition digital assets.",
+        "email": "stampbook.contact@gmail.com",
+        "sameAs": [
+            "https://github.com/zedanazad43/stp",
+            "https://github.com/zedanazad43/stampcoin-platform"
+        ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Stampbook",
+        "url": "https://stampcoin-platform.fly.dev/",
+        "description": "Live blockchain marketplace for digital stamps, collectibles, wallets, and token infrastructure."
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="site-shell">
+        <header class="topbar">
+            <a class="brand" href="#hero">
+                <span class="brand-mark" aria-hidden="true">
+                    <img src="/assets/stampbook-logo.svg" alt="Stampbook logo">
+                </span>
+                <span class="brand-copy">
+                    <strong>Stampbook</strong>
+                    <small>STP Social Chain</small>
+                </span>
+            </a>
+            <label class="top-search" aria-label="Search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" placeholder="Search collectors, groups, NFTs...">
+            </label>
+            <nav class="topnav">
+                <a class="nav-tab" data-nav-target="#stampbook-social" href="#stampbook-social" title="Feed">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Feed</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#marketplace" href="#marketplace" title="Marketplace">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Market</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#wallet-lab" href="#wallet-lab" title="Wallet Lab">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Wallet</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#token-hub" href="#token-hub" title="Token Hub">
+                    <i class="fa-solid fa-coins"></i>
+                    <span>STP</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#nft-mint-studio" href="#nft-mint-studio" title="NFT Studio">
+                    <i class="fa-solid fa-cube"></i>
+                    <span>NFT</span>
+                </a>
+                <a class="nav-tab" data-nav-target="#admin-panel" href="#admin-panel" title="Admin">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Admin</span>
+                </a>
+            </nav>
+            <div class="topbar-actions">
+                <button class="theme-toggle" id="themeToggleBtn" type="button" aria-label="Switch visual theme" title="Switch theme">
+                    <i class="fa-solid fa-palette"></i>
+                    <span id="themeToggleLabel">Classic</span>
+                </button>
+                <button class="theme-toggle" id="compactToggleBtn" type="button" aria-label="Toggle compact mode" title="Toggle compact mode">
+                    <i class="fa-solid fa-compress"></i>
+                    <span id="compactToggleLabel">Compact Off</span>
+                </button>
+                <div class="coin-chip" title="Stampbook Token">
+                    <span class="coin-chip-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+                    <span class="coin-chip-copy">
+                        <strong>STP</strong>
+                        <small>Stampbook Coin</small>
+                    </span>
+                </div>
+                <a class="topbar-icon" href="#social-notifications" title="Notifications" aria-label="Notifications">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge" id="notificationCountBadge">0</span>
+                </a>
+                <details class="user-dropdown" id="userDropdown">
+                    <summary>
+                        <span class="user-avatar">AZ</span>
+                        <span class="user-meta">
+                            <strong id="userDisplayName">User Dashboard</strong>
+                            <small>Account center</small>
+                        </span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </summary>
+                    <div class="dropdown-menu">
+                        <ul>
+                            <li><i class="fa-solid fa-user"></i> Username: <strong id="profileUserName">collector-pro</strong></li>
+                            <li><i class="fa-solid fa-wallet"></i> Wallet: <strong id="profileWallet">Not linked</strong></li>
+                            <li><i class="fa-solid fa-id-card"></i> Verification: <strong id="profileVerification">Pending</strong></li>
+                            <li><i class="fa-solid fa-gear"></i> Settings</li>
+                            <li><i class="fa-solid fa-credit-card"></i> Payment Methods</li>
+                            <li><i class="fa-solid fa-money-bill-transfer"></i> Currency Withdrawals</li>
+                            <li><i class="fa-solid fa-coins"></i> Tokens Portfolio</li>
+                            <li><i class="fa-solid fa-cube"></i> NFT Portfolio</li>
+                            <li><i class="fa-solid fa-stamp"></i> Owned Stamp Content</li>
+                            <li><i class="fa-solid fa-arrow-up-from-bracket"></i> Uploaded/Converted NFTs</li>
+                            <li><i class="fa-solid fa-cart-shopping"></i> Purchased NFTs</li>
+                        </ul>
+                    </div>
+                </details>
+                <a class="topbar-cta" href="#marketplace">Explore Market</a>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero" id="hero">
+                <div class="hero-copy">
+                    <p class="eyebrow">Stampbook social + blockchain stack</p>
+                    <h1>انشر وشارك وتداول المقتنيات الرقمية في شبكة اجتماعية متكاملة.</h1>
+                    <p class="hero-text">
+                        Stampbook يجمع تجربة فيسبوك الاجتماعية مع ميزات Web3 السابقة: قصص يومية، منشورات مجتمع،
+                        ملفات شخصية لهواة الطوابع، مع محافظ رقمية، سك NFT، تداول، وتسوية on-chain على نفس المنصة.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="button button-primary" href="#marketplace">Browse Live Listings</a>
+                        <a class="button button-secondary" href="#token-hub">Token Fundamentals</a>
+                    </div>
+                    <div class="hero-badges">
+                        <span><i class="fa-solid fa-coins"></i> STP Token + On-chain Wallets</span>
+                        <span><i class="fa-solid fa-shield-halved"></i> Auth-protected Admin API</span>
+                        <span><i class="fa-solid fa-rocket"></i> Live on Fly.io</span>
+                    </div>
+                    <div class="brand-identity-strip">
+                        <span class="identity-mark"><i class="fa-solid fa-stamp"></i></span>
+                        <span class="identity-copy">
+                            <strong>Stampbook Coin - STP</strong>
+                            <small>Social first. Collectibles native. On-chain ready.</small>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="hero-panel">
+                    <div class="panel-head">
+                        <span>Live Platform Snapshot</span>
+                        <span class="status-pill" id="heroHealthPill">Checking</span>
+                    </div>
+                    <div class="metric-grid">
+                        <article class="metric-card accent-blue">
+                            <p>Listings</p>
+                            <strong id="metricListings">--</strong>
+                            <small>available in market</small>
+                        </article>
+                        <article class="metric-card accent-gold">
+                            <p>Transactions</p>
+                            <strong id="metricTransactions">--</strong>
+                            <small>market movements</small>
+                        </article>
+                        <article class="metric-card accent-green">
+                            <p>Token Supply</p>
+                            <strong id="metricSupply">--</strong>
+                            <small>STP total supply</small>
+                        </article>
+                        <article class="metric-card accent-slate">
+                            <p>Service Version</p>
+                            <strong id="metricVersion">--</strong>
+                            <small>runtime build</small>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="stampbook-social">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Stampbook Social</p>
+                        <h2>تجربة اجتماعية شبيهة فيس بوك لهواة الطوابع والمقتنيات</h2>
+                    </div>
+                    <button class="button button-ghost compact-button" id="leftRailToggleBtn" type="button">Hide Left Rail</button>
+                </div>
+                <div class="stampbook-layout">
+                    <aside class="stampbook-side" id="stampbookLeftRail">
+                        <article class="studio-card compact-card quick-nav-card">
+                            <h3>Shortcuts</h3>
+                            <a href="#stampbook-social" class="quick-link"><i class="fa-solid fa-newspaper"></i><span>News Feed</span></a>
+                            <a href="#social-notifications" class="quick-link"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
+                            <a href="#marketplace" class="quick-link"><i class="fa-solid fa-store"></i><span>Marketplace</span></a>
+                            <a href="#token-hub" class="quick-link"><i class="fa-solid fa-coins"></i><span>STP Wallet & Token</span></a>
+                            <a href="#nft-mint-studio" class="quick-link"><i class="fa-solid fa-cube"></i><span>NFT Studio</span></a>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <div class="card-header-row">
+                                <h3>Stories</h3>
+                                <span class="mini-label">24h highlights</span>
+                            </div>
+                            <div class="story-rail" id="storyRail"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Trending</h3>
+                            <div class="trending-ticker" id="trendingTicker"></div>
+                        </article>
+                    </aside>
+
+                    <section class="stampbook-main">
+                        <article class="studio-card post-composer-card">
+                            <h3>Create Post</h3>
+                            <form id="stampbookComposerForm" class="stack-form">
+                                <label>
+                                    <span>What's new in your collection?</span>
+                                    <textarea id="sbPostText" rows="3" placeholder="Share stamp insights, listing updates, or collector stories..." required></textarea>
+                                </label>
+                                <div class="composer-quick-actions" role="group" aria-label="Quick actions">
+                                    <button type="button" data-compose-action="photo"><i class="fa-solid fa-image"></i> Photo/Video</button>
+                                    <button type="button" data-compose-action="tag"><i class="fa-solid fa-user-tag"></i> Tag Collector</button>
+                                    <button type="button" data-compose-action="feeling"><i class="fa-regular fa-face-smile"></i> Feeling</button>
+                                </div>
+                                <label>
+                                    <span>Optional image URL</span>
+                                    <input id="sbPostImage" placeholder="https://.../collection.jpg">
+                                </label>
+                                <button class="button button-primary" type="submit">Publish to Stampbook</button>
+                            </form>
+                            <div class="result-panel" id="stampbookComposerResult"></div>
+                        </article>
+
+                        <article class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Stampbook Feed</h3>
+                                <span class="mini-label">Live community timeline</span>
+                            </div>
+                            <div class="community-feed" id="communityFeed"></div>
+                        </article>
+                    </section>
+
+                    <aside class="stampbook-side right">
+                        <article class="studio-card compact-card">
+                            <h3>People You May Know</h3>
+                            <div id="peopleYouMayKnow" class="people-list"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Profile Snapshot</h3>
+                            <form id="profileLookupForm" class="stack-form">
+                                <label>
+                                    <span>User ID</span>
+                                    <input id="profileLookupUserId" placeholder="collector-pro" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Load Profile</button>
+                            </form>
+                            <a class="button button-ghost compact-button" id="openProfileViewBtn" href="#profile/collector-pro">Open Profile Timeline</a>
+                            <div class="result-panel" id="profileLookupResult"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Friend Requests</h3>
+                            <form id="friendRequestForm" class="stack-form">
+                                <label>
+                                    <span>Target User ID</span>
+                                    <input id="friendTargetUserId" placeholder="collector-77" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Send Request</button>
+                            </form>
+                            <div class="result-panel" id="friendRequestResult"></div>
+                            <div class="social-mini-list" id="friendsBoard"></div>
+                        </article>
+                        <article class="studio-card compact-card">
+                            <h3>Collector Groups</h3>
+                            <form id="groupCreateForm" class="stack-form">
+                                <label>
+                                    <span>Group Name</span>
+                                    <input id="groupNameInput" placeholder="Arab Stamp Collectors" required>
+                                </label>
+                                <label>
+                                    <span>About</span>
+                                    <input id="groupAboutInput" placeholder="Focused on historical postal collectibles" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Create Group</button>
+                            </form>
+                            <div class="result-panel" id="groupCreateResult"></div>
+                            <div class="social-mini-list" id="groupsList"></div>
+                            <a class="button button-ghost compact-button" id="openGroupViewBtn" href="#group">Open Group Timeline</a>
+                            <form id="groupPostForm" class="stack-form">
+                                <label>
+                                    <span>Group</span>
+                                    <select id="groupPostGroupId" required></select>
+                                </label>
+                                <label>
+                                    <span>Group Post</span>
+                                    <input id="groupPostBody" placeholder="New showcase drop this Friday" required>
+                                </label>
+                                <button class="button button-secondary" type="submit">Post to Group</button>
+                            </form>
+                            <div class="result-panel" id="groupPostResult"></div>
+                        </article>
+                        <article class="studio-card compact-card" id="social-notifications">
+                            <div class="card-header-row">
+                                <h3>Notifications</h3>
+                                <button class="button button-ghost compact-button" id="markNotificationsReadBtn" type="button">Mark all read</button>
+                            </div>
+                            <div class="mini-actions" id="notificationFilters">
+                                <button type="button" class="active" data-notification-filter="all">All</button>
+                                <button type="button" data-notification-filter="unread">Unread</button>
+                                <button type="button" data-notification-filter="requests">Requests</button>
+                            </div>
+                            <div class="social-mini-list" id="notificationBoard"></div>
+                        </article>
+                        <article class="studio-card compact-card spotlight-card">
+                            <h3>Stampbook Spotlight</h3>
+                            <p>ميزة المنصة: شبكة اجتماعية + تداول + NFT + Token داخل واجهة موحدة بدون تنقل مشتت.</p>
+                            <div class="spotlight-metrics">
+                                <span><i class="fa-solid fa-bolt"></i> Live social actions</span>
+                                <span><i class="fa-solid fa-lock"></i> Protected ops console</span>
+                                <span><i class="fa-solid fa-link"></i> On-chain ready stack</span>
+                            </div>
+                        </article>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="section social-detail-view" id="socialProfileView" hidden>
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Profile Timeline</p>
+                        <h2 id="profileViewTitle">Profile</h2>
+                    </div>
+                    <a class="button button-secondary" href="#stampbook-social">Back to Feed</a>
+                </div>
+                <div class="studio-card">
+                    <div class="result-panel" id="profileTimelineStats"></div>
+                    <div class="community-feed" id="profileTimelinePosts"></div>
+                </div>
+            </section>
+
+            <section class="section social-detail-view" id="socialGroupView" hidden>
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Group Timeline</p>
+                        <h2 id="groupViewTitle">Group</h2>
+                    </div>
+                    <a class="button button-secondary" href="#stampbook-social">Back to Feed</a>
+                </div>
+                <div class="studio-card">
+                    <div class="result-panel" id="groupTimelineMeta"></div>
+                    <div class="community-feed" id="groupTimelinePosts"></div>
+                </div>
+            </section>
+
+            <!-- Token distribution strip -->
+            <section class="token-dist-strip" id="tokenDist">
+                <div class="dist-card">
+                    <span class="dist-label">Token</span>
+                    <strong class="dist-value" id="distName">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Symbol</span>
+                    <strong class="dist-value" id="distSymbol">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Circulating Supply</span>
+                    <strong class="dist-value" id="distCirculating">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Max Supply</span>
+                    <strong class="dist-value" id="distMax">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Blockchain</span>
+                    <strong class="dist-value" id="distChain">--</strong>
+                </div>
+                <div class="dist-card">
+                    <span class="dist-label">Decimals</span>
+                    <strong class="dist-value" id="distDecimals">--</strong>
+                </div>
+            </section>
+
+            <section class="section stc-economics" id="stc-economics">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">STC / STP Economics</p>
+                        <h2>Smart contract profile, initial issuance, and market vision</h2>
+                    </div>
+                </div>
+                <div class="stc-grid">
+                    <article class="studio-card stc-brand-card">
+                        <div class="stc-icon" aria-hidden="true">
+                            <i class="fa-solid fa-stamp"></i>
+                        </div>
+                        <h3>Stampbook Coin (STC/STP)</h3>
+                        <p>Utility + settlement token for stamp trading, NFT minting fees, creator rewards, and marketplace operations.</p>
+                        <div class="chip-row">
+                            <span class="json-chip">Symbol: STC</span>
+                            <span class="json-chip">Ticker alt: STP</span>
+                            <span class="json-chip">Network: EVM-ready</span>
+                        </div>
+                    </article>
+
+                    <article class="studio-card stc-contract-card">
+                        <h3>Smart Contract Address</h3>
+                        <p class="contract-address" id="stcContractAddress">0x8A63eA3D5D8D0F7A9C09F9e6f8c5B18F4c4d1A21</p>
+                        <p class="helper-note">Suggested production flow: deploy audited ERC-20 contract and update address after mainnet launch.</p>
+                    </article>
+
+                    <article class="studio-card stc-tokenomics-card">
+                        <h3>Initial Issuance: 42,000,000 STC</h3>
+                        <ul class="tokenomics-list">
+                            <li><strong>35%</strong> Ecosystem & liquidity growth (14,700,000)</li>
+                            <li><strong>20%</strong> Public/community sale (8,400,000)</li>
+                            <li><strong>15%</strong> Team & core contributors, vested (6,300,000)</li>
+                            <li><strong>10%</strong> Strategic investors / partners (4,200,000)</li>
+                            <li><strong>8%</strong> Staking rewards (3,360,000)</li>
+                            <li><strong>7%</strong> Treasury & operations (2,940,000)</li>
+                            <li><strong>5%</strong> Marketing, creators, and grants (2,100,000)</li>
+                        </ul>
+                        <p class="market-cap-note">Suggested initial FDV target: <strong>$16.8M</strong> (at <strong>$0.40/STC</strong>) with opening circulating market cap around <strong>$4.2M</strong> if 25% is circulating.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="showcase-strip">
+                <article>
+                    <span>Curated digital collectibles</span>
+                    <strong>Browse, filter, and buy stamps and limited-edition assets with live pricing</strong>
+                </article>
+                <article>
+                    <span>Real wallet infrastructure</span>
+                    <strong>Create wallets, settle transfers, and track on-chain balance — wired to production APIs</strong>
+                </article>
+                <article>
+                    <span>Investor-ready architecture</span>
+                    <strong>GitHub Actions CI/CD, GHCR Docker registry, Fly.io warm instances — demo in seconds</strong>
+                </article>
+            </section>
+
+            <section class="section" id="marketplace">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Marketplace</p>
+                        <h2>Featured listings and trading actions</h2>
+                    </div>
+                    <button class="button button-ghost" id="refreshListingsBtn" type="button">Refresh listings</button>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="filterSearch" type="text" placeholder="Search listings…" aria-label="Search listings">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterType">Type</label>
+                        <select id="filterType" aria-label="Filter by type">
+                            <option value="">All types</option>
+                            <option value="stamp">Stamp</option>
+                            <option value="collectible">Collectible</option>
+                            <option value="limited">Limited</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus" aria-label="Filter by status">
+                            <option value="">All statuses</option>
+                            <option value="active">Active</option>
+                            <option value="sold">Sold</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterSort">Sort</label>
+                        <select id="filterSort" aria-label="Sort listings">
+                            <option value="">Default</option>
+                            <option value="price-asc">Price: Low → High</option>
+                            <option value="price-desc">Price: High → Low</option>
+                            <option value="newest">Newest first</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="market-grid">
+                    <div class="listing-stage">
+                        <div class="card-header-row">
+                            <h3>Featured Market Items</h3>
+                            <span class="mini-label" id="listingCountLabel">Loading items</span>
+                        </div>
+                        <div class="listing-cards" id="featuredListings"></div>
+                    </div>
+
+                    <aside class="side-card">
+                        <div class="card-header-row">
+                            <h3>Buy a Listing</h3>
+                            <span class="mini-label">Instant market action</span>
+                        </div>
+                        <form id="buyItemForm" class="stack-form">
+                            <label>
+                                <span>Item ID</span>
+                                <input id="buyItemId" name="buyItemId" placeholder="item_123" required>
+                            </label>
+                            <label>
+                                <span>Buyer ID</span>
+                                <input id="buyerId" name="buyerId" placeholder="collector-01" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Buy item</button>
+                        </form>
+                        <div class="result-panel" id="buyItemResult"></div>
+                    </aside>
+                </div>
+
+                <div class="studio-grid two-up">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>List a New Asset</h3>
+                            <span class="mini-label">Seller console</span>
+                        </div>
+                        <form id="listItemForm" class="stack-form two-col-form">
+                            <label>
+                                <span>Seller ID</span>
+                                <input id="sellerId" name="sellerId" placeholder="seller-01" required>
+                            </label>
+                            <label>
+                                <span>Asset Name</span>
+                                <input id="itemName" name="itemName" placeholder="Rare Postal Proof" required>
+                            </label>
+                            <label>
+                                <span>Price</span>
+                                <input id="itemPrice" name="itemPrice" type="number" min="0" placeholder="250" required>
+                            </label>
+                            <label>
+                                <span>Type</span>
+                                <input id="itemType" name="itemType" placeholder="stamp, collectible, limited">
+                            </label>
+                            <label class="full-width">
+                                <span>Description</span>
+                                <textarea id="itemDesc" name="itemDesc" rows="4" placeholder="Describe provenance, rarity, and condition."></textarea>
+                            </label>
+                            <button class="button button-primary full-width" type="submit">Publish listing</button>
+                        </form>
+                        <div class="result-panel" id="listItemResult"></div>
+                    </section>
+
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Market Activity</h3>
+                            <span class="mini-label">Recent transactions</span>
+                        </div>
+                        <button class="button button-secondary compact-button" id="marketTxBtn" type="button">Load market transactions</button>
+                        <div class="table-shell" id="marketTxResult"></div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="section" id="wallet-lab">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Wallet Lab</p>
+                        <h2>Operate user wallets with production-ready controls</h2>
+                    </div>
+                </div>
+
+                <div class="studio-grid three-up">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Create wallet</h3>
+                            <span class="mini-label">Onboard a collector</span>
+                        </div>
+                        <form id="createWalletForm" class="stack-form">
+                            <label>
+                                <span>User ID</span>
+                                <input id="userId" name="userId" placeholder="collector-07" required>
+                            </label>
+                            <label>
+                                <span>User name</span>
+                                <input id="userName" name="userName" placeholder="Mariam Zedan" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Create wallet</button>
+                        </form>
+                        <div class="result-panel" id="createWalletResult"></div>
+                    </section>
+
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>View wallet</h3>
+                            <span class="mini-label">Balances and assets</span>
+                        </div>
+                        <form id="viewWalletForm" class="stack-form">
+                            <label>
+                                <span>User ID</span>
+                                <input id="viewUserId" name="viewUserId" placeholder="collector-07" required>
+                            </label>
+                            <button class="button button-secondary" type="submit">Load wallet</button>
+                        </form>
+                        <div class="result-panel" id="viewWalletResult"></div>
+                    </section>
+
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Transfer balance</h3>
+                            <span class="mini-label">Peer-to-peer settlement</span>
+                        </div>
+                        <form id="transferForm" class="stack-form">
+                            <label>
+                                <span>From user</span>
+                                <input id="fromUserId" name="fromUserId" placeholder="collector-01" required>
+                            </label>
+                            <label>
+                                <span>To user</span>
+                                <input id="toUserId" name="toUserId" placeholder="collector-02" required>
+                            </label>
+                            <label>
+                                <span>Amount</span>
+                                <input id="transferAmount" name="transferAmount" type="number" min="1" placeholder="150" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Transfer</button>
+                        </form>
+                        <div class="result-panel" id="transferResult"></div>
+                    </section>
+                </div>
+
+                <div class="studio-grid two-up">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Wallet transaction history</h3>
+                            <span class="mini-label">Per-wallet ledger</span>
+                        </div>
+                        <form id="transactionsForm" class="stack-form inline-form">
+                            <label class="grow">
+                                <span>User ID</span>
+                                <input id="txUserId" name="txUserId" placeholder="collector-07" required>
+                            </label>
+                            <button class="button button-secondary" type="submit">Load history</button>
+                        </form>
+                        <div class="table-shell" id="transactionsResult"></div>
+                    </section>
+
+                    <section class="studio-card note-card">
+                        <div class="card-header-row">
+                            <h3>Operator guidance</h3>
+                            <span class="mini-label">Production notes</span>
+                        </div>
+                        <ul class="note-list">
+                            <li>Create a wallet before listing or buying items.</li>
+                            <li>Transfers settle marketplace purchases when price is above zero.</li>
+                            <li>Protected routes require a bearer token — use the Admin panel below.</li>
+                            <li>The UI calls the live API routes already deployed on Fly.io.</li>
+                        </ul>
+                    </section>
+                </div>
+            </section>
+
+            <section class="section" id="token-hub">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Token Hub</p>
+                        <h2>Token intelligence and blockchain lookups</h2>
+                    </div>
+                </div>
+
+                <div class="studio-grid three-up">
+                    <section class="studio-card action-card">
+                        <h3>Token profile</h3>
+                        <p>Inspect STP token metadata, supply, distribution, and contact references.</p>
+                        <button class="button button-primary" id="getTokenBtn" type="button">Get token info</button>
+                        <div class="result-panel" id="tokenResult"></div>
+                    </section>
+
+                    <section class="studio-card action-card">
+                        <h3>Blockchain details</h3>
+                        <p>Check chain-level information exposed through the platform runtime.</p>
+                        <button class="button button-secondary" id="getBlockchainBtn" type="button">Get blockchain info</button>
+                        <div class="result-panel" id="blockchainResult"></div>
+                    </section>
+
+                    <section class="studio-card action-card">
+                        <h3>Supply overview</h3>
+                        <p>Read the current supply view for token operations and investor reporting.</p>
+                        <button class="button button-secondary" id="getSupplyBtn" type="button">Get supply</button>
+                        <div class="result-panel" id="supplyResult"></div>
+                    </section>
+                </div>
+
+                <div class="studio-grid two-up">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Address balance lookup</h3>
+                            <span class="mini-label">On-chain view</span>
+                        </div>
+                        <form id="balanceForm" class="stack-form inline-form">
+                            <label class="grow">
+                                <span>Wallet address</span>
+                                <input id="balanceAddress" name="balanceAddress" placeholder="0x1234...abcd" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Check balance</button>
+                        </form>
+                        <div class="result-panel" id="balanceResult"></div>
+                    </section>
+
+                    <section class="studio-card quote-card">
+                        <p class="eyebrow">Investor positioning</p>
+                        <blockquote>
+                            Stampbook delivers real on-chain infrastructure for the digital collectibles
+                            vertical — not a prototype, but a live exchange platform with token economics,
+                            wallet primitives, and a production-grade API already running and deployable
+                            in minutes.
+                        </blockquote>
+                    </section>
+                </div>
+            </section>
+
+            <section class="section" id="cultural-hub">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Cultural Hub</p>
+                        <h2>Community blogging, promotion, and stamp storytelling</h2>
+                    </div>
+                </div>
+                <div class="studio-grid two-up">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Publish cultural post</h3>
+                            <span class="mini-label">Blog + promotion</span>
+                        </div>
+                        <form id="culturePostForm" class="stack-form">
+                            <label>
+                                <span>Post title</span>
+                                <input id="cultureTitle" placeholder="History of my rare stamp series" required>
+                            </label>
+                            <label>
+                                <span>Image URL (stamp photo)</span>
+                                <input id="cultureImage" placeholder="https://.../stamp.jpg">
+                            </label>
+                            <label>
+                                <span>Post content</span>
+                                <textarea id="cultureBody" rows="4" placeholder="Write the story, rarity details, and promotion notes..." required></textarea>
+                            </label>
+                            <button class="button button-primary" type="submit">Publish post</button>
+                        </form>
+                        <div class="result-panel" id="culturePostResult"></div>
+                    </section>
+
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Creator Studio</h3>
+                            <span class="mini-label">Long-form publishing</span>
+                        </div>
+                        <p class="helper-note">Use this section for curated stories and promotional articles, while day-to-day engagement appears in the Stampbook Feed.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="section" id="nft-categories">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">NFT Categories</p>
+                        <h2>Famous stamp collections as NFT classes</h2>
+                    </div>
+                </div>
+                <div class="nft-category-grid">
+                    <article class="nft-cat-card">
+                        <h3>Penny Black Heritage</h3>
+                        <p>High-prestige historical line for classic philately collectors.</p>
+                        <span class="json-chip">NFT Series: PH-001</span>
+                    </article>
+                    <article class="nft-cat-card">
+                        <h3>Blue Mauritius Legacy</h3>
+                        <p>Scarcity-driven premium assets inspired by world-known rarities.</p>
+                        <span class="json-chip">NFT Series: BM-019</span>
+                    </article>
+                    <article class="nft-cat-card">
+                        <h3>Inverted Jenny Classics</h3>
+                        <p>Aviation and printing-error themed collectible line.</p>
+                        <span class="json-chip">NFT Series: IJ-024</span>
+                    </article>
+                    <article class="nft-cat-card">
+                        <h3>Modern Arab Philately</h3>
+                        <p>Regional contemporary stamp artistry with creator royalties.</p>
+                        <span class="json-chip">NFT Series: MAP-311</span>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="nft-mint-studio">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Mint Studio</p>
+                        <h2>Upload JPG stamps and convert to NFTs with platform fees</h2>
+                    </div>
+                </div>
+                <div class="studio-grid two-up">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>JPG to NFT</h3>
+                            <span class="mini-label">Minting gateway</span>
+                        </div>
+                        <form id="mintJpgForm" class="stack-form">
+                            <label>
+                                <span>Owner user ID</span>
+                                <input id="mintOwnerId" placeholder="collector-14" required>
+                            </label>
+                            <label>
+                                <span>Stamp title</span>
+                                <input id="mintStampTitle" placeholder="Ottoman Post 1912" required>
+                            </label>
+                            <label>
+                                <span>Upload JPG image</span>
+                                <input id="mintJpgFile" type="file" accept="image/jpeg,.jpg" required>
+                            </label>
+                            <label>
+                                <span>Minting fee currency</span>
+                                <select id="mintFeeCurrency" required>
+                                    <option value="STC">STC</option>
+                                    <option value="USDT">USDT</option>
+                                    <option value="ETH">ETH</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>Minting fee amount</span>
+                                <input id="mintFeeAmount" type="number" min="0" step="0.0001" value="12" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Create NFT draft</button>
+                        </form>
+                        <div class="result-panel" id="mintJpgResult"></div>
+                    </section>
+
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Revenue split and listing</h3>
+                            <span class="mini-label">User + platform shares</span>
+                        </div>
+                        <div class="split-box">
+                            <p><strong>User share:</strong> <span id="splitUserShare">85%</span></p>
+                            <p><strong>Platform fee:</strong> <span id="splitPlatformShare">15%</span></p>
+                            <p><strong>Protection:</strong> metadata hash + ownership log + transaction signature.</p>
+                        </div>
+                        <div class="nft-preview" id="mintNftPreview">
+                            <div class="empty-state">Upload a JPG to preview NFT draft.</div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="section" id="trade-hub">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Trading Hub</p>
+                        <h2>Centralized + decentralized trading pathways</h2>
+                    </div>
+                </div>
+                <div class="studio-grid three-up">
+                    <section class="studio-card action-card">
+                        <h3>Platform Exchange (CEX style)</h3>
+                        <p>Internal orderbook for STC, NFT floor pricing, and instant settlement via custodial wallets.</p>
+                        <button class="button button-primary" id="openExchangeBtn" type="button">Open trading panel</button>
+                        <div class="result-panel" id="exchangeResult"></div>
+                    </section>
+                    <section class="studio-card action-card">
+                        <h3>Decentralized Trading (DEX)</h3>
+                        <p>Connect Web3 wallet, approve token, and route swaps through DEX liquidity pools.</p>
+                        <button class="button button-secondary" id="openDexBtn" type="button">Open DEX panel</button>
+                        <div class="result-panel" id="dexResult"></div>
+                    </section>
+                    <section class="studio-card action-card">
+                        <h3>Cash In / Fiat Gateway</h3>
+                        <p>Receive fiat payments to buy stamps, tokens, or NFTs through compliant payment rails.</p>
+                        <button class="button button-secondary" id="openFiatBtn" type="button">Open fiat deposit flow</button>
+                        <div class="result-panel" id="fiatResult"></div>
+                    </section>
+                    <section class="studio-card action-card">
+                        <h3>Web3 Wallet Connect</h3>
+                        <p>Connect MetaMask, detect chain, and prepare STC interactions on EVM networks.</p>
+                        <button class="button button-primary" id="connectWeb3Btn" type="button">Connect wallet</button>
+                        <div class="result-panel" id="web3Result"></div>
+
+                        <form id="stcBalanceForm" class="stack-form" style="margin-top:12px;">
+                            <label>
+                                <span>Address for STC balance</span>
+                                <input id="web3BalanceAddress" placeholder="0x... (leave empty to use connected wallet)">
+                            </label>
+                            <button class="button button-secondary" id="getStcBalanceBtn" type="submit">Get STC balance</button>
+                        </form>
+                        <div class="result-panel" id="web3BalanceResult"></div>
+
+                        <form id="approveStcForm" class="stack-form" style="margin-top:12px;">
+                            <label>
+                                <span>Spender address</span>
+                                <input id="approveSpender" placeholder="0x..." required>
+                            </label>
+                            <label>
+                                <span>Amount (STC)</span>
+                                <input id="approveAmount" type="number" min="0" step="0.000001" placeholder="100" required>
+                            </label>
+                            <button class="button button-secondary" type="submit">Approve STC</button>
+                        </form>
+                        <div class="result-panel" id="approveResult"></div>
+
+                        <form id="mintOnchainForm" class="stack-form" style="margin-top:12px;">
+                            <label>
+                                <span>Recipient address</span>
+                                <input id="mintToAddress" placeholder="0x..." required>
+                            </label>
+                            <label>
+                                <span>Metadata URI</span>
+                                <input id="mintMetadataUri" placeholder="ipfs://..." required>
+                            </label>
+                            <label>
+                                <span>Mint fee override (ETH, optional)</span>
+                                <input id="mintFeeEth" type="number" min="0" step="0.0000001" placeholder="leave empty to read contract fee">
+                            </label>
+                            <button class="button button-primary" type="submit">Mint NFT on-chain</button>
+                        </form>
+                        <div class="result-panel" id="mintOnchainResult"></div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="section" id="p2p-escrow">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Real Stamps P2P</p>
+                        <h2>Escrow-protected buying and selling for physical stamps</h2>
+                    </div>
+                </div>
+                <div class="studio-grid two-up">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>List physical stamp sale</h3>
+                            <span class="mini-label">Platform as mediator</span>
+                        </div>
+                        <form id="p2pSaleForm" class="stack-form">
+                            <label>
+                                <span>Seller ID</span>
+                                <input id="p2pSeller" placeholder="seller-17" required>
+                            </label>
+                            <label>
+                                <span>Stamp details</span>
+                                <input id="p2pStamp" placeholder="Blue Mauritius 1847 (certified)" required>
+                            </label>
+                            <label>
+                                <span>Ask price (USD)</span>
+                                <input id="p2pPrice" type="number" min="1" placeholder="3200" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Create escrow listing</button>
+                        </form>
+                        <div class="result-panel" id="p2pSaleResult"></div>
+                    </section>
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>P2P protection model</h3>
+                            <span class="mini-label">Fees + trust layer</span>
+                        </div>
+                        <ul class="note-list">
+                            <li>Buyer funds are locked in escrow until receipt confirmation.</li>
+                            <li>Platform dispute window and evidence upload for both sides.</li>
+                            <li>Settlement release with transparent fee policy.</li>
+                            <li>Recommended fee split: 3.5% platform + optional insurance add-on.</li>
+                        </ul>
+                        <div class="result-panel" id="p2pEscrowResult"></div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="section" id="ops-center">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Ops Center</p>
+                        <h2>Platform health and deployment confidence</h2>
+                    </div>
+                    <button class="button button-ghost" id="healthBtn" type="button">Refresh health</button>
+                </div>
+
+                <div class="ops-layout">
+                    <section class="studio-card">
+                        <div class="card-header-row">
+                            <h3>Service health</h3>
+                            <span class="mini-label">Live runtime</span>
+                        </div>
+                        <div class="table-shell" id="healthResult"></div>
+                    </section>
+
+                    <section class="studio-card note-card">
+                        <div class="card-header-row">
+                            <h3>Deployment posture</h3>
+                            <span class="mini-label">Production checklist</span>
+                        </div>
+                        <ul class="note-list">
+                            <li>GitHub Actions supports push deploys and manual dispatch.</li>
+                            <li>GHCR publishes under a package namespace that no longer conflicts with legacy ACLs.</li>
+                            <li>Fly.io keeps one machine warm to reduce cold-start latency.</li>
+                            <li>The current frontend is served from the same production Express application.</li>
+                        </ul>
+                    </section>
+                </div>
+            </section>
+
+                <!-- Admin Console (token-gated) -->
+            <section class="section" id="admin-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Admin Console</p>
+                        <h2>Operator controls for protected platform endpoints</h2>
+                    </div>
+                    <span class="admin-status-pill" id="adminStatusPill">
+                        <i class="fa-solid fa-lock"></i> Locked
+                    </span>
+                </div>
+
+                <!-- Lock gate -->
+                <div class="admin-gate" id="adminGate">
+                    <div class="admin-lock-card">
+                        <div class="admin-lock-icon"><i class="fa-solid fa-lock"></i></div>
+                        <h3>Authentication required</h3>
+                        <p>Enter your <code>SYNC_TOKEN</code> to unlock operator controls. The token is stored only in this browser session and never sent to any third party.</p>
+                        <form id="adminUnlockForm" class="stack-form admin-unlock-form">
+                            <label>
+                                <span>Sync Token</span>
+                                <input id="adminTokenInput" type="password" placeholder="Your SYNC_TOKEN value" autocomplete="current-password" required>
+                            </label>
+                            <button class="button button-primary" type="submit">Unlock console</button>
+                        </form>
+                        <div class="result-panel" id="adminUnlockResult"></div>
+                    </div>
+                </div>
+
+                <!-- Admin console (shown after unlock) -->
+                <div class="admin-console" id="adminConsole" hidden>
+                    <div class="admin-banner">
+                        <span><i class="fa-solid fa-unlock"></i> Admin session active &mdash; all actions call live protected endpoints</span>
+                        <button class="button button-ghost compact-button" id="adminLockBtn" type="button">Lock session</button>
+                    </div>
+
+                    <div class="studio-grid two-up">
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>All wallets</h3>
+                                <span class="mini-label">GET /api/wallets</span>
+                            </div>
+                            <button class="button button-secondary compact-button" id="adminAllWalletsBtn" type="button">Load all wallets</button>
+                            <div class="table-shell" id="adminWalletsResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Top-up wallet</h3>
+                                <span class="mini-label">POST /api/wallet/:id/topup</span>
+                            </div>
+                            <form id="adminTopupForm" class="stack-form">
+                                <label>
+                                    <span>User ID</span>
+                                    <input id="adminTopupUserId" placeholder="collector-01" required>
+                                </label>
+                                <label>
+                                    <span>Amount</span>
+                                    <input id="adminTopupAmount" type="number" min="1" placeholder="500" required>
+                                </label>
+                                <button class="button button-primary" type="submit">Top up</button>
+                            </form>
+                            <div class="result-panel" id="adminTopupResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Mint tokens</h3>
+                                <span class="mini-label">POST /api/blockchain/mint</span>
+                            </div>
+                            <form id="adminMintForm" class="stack-form">
+                                <label>
+                                    <span>Recipient address</span>
+                                    <input id="adminMintTo" placeholder="0xabc...def" required>
+                                </label>
+                                <label>
+                                    <span>Amount</span>
+                                    <input id="adminMintAmount" type="number" min="1" placeholder="1000" required>
+                                </label>
+                                <button class="button button-primary" type="submit">Mint</button>
+                            </form>
+                            <div class="result-panel" id="adminMintResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Mint events</h3>
+                                <span class="mini-label">GET /api/blockchain/mint/events</span>
+                            </div>
+                            <button class="button button-secondary compact-button" id="adminMintEventsBtn" type="button">Load mint events</button>
+                            <div class="table-shell" id="adminMintEventsResult"></div>
+                        </section>
+
+                        <section class="studio-card">
+                            <div class="card-header-row">
+                                <h3>Add stamp to wallet</h3>
+                                <span class="mini-label">POST /api/wallet/:id/stamps</span>
+                            </div>
+                            <form id="adminAddStampForm" class="stack-form two-col-form">
+                                <label>
+                                    <span>User ID</span>
+                                    <input id="adminStampUserId" placeholder="collector-01" required>
+                                </label>
+                                <label>
+                                    <span>Stamp ID</span>
+                                    <input id="adminStampId" placeholder="stamp-rare-01" required>
+                                </label>
+                                <label class="full-width">
+                                    <span>Stamp name</span>
+                                    <input id="adminStampName" placeholder="Penny Black Replica" required>
+                                </label>
+                                <button class="button button-primary full-width" type="submit">Add stamp</button>
+                            </form>
+                            <div class="result-panel" id="adminAddStampResult"></div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div>
+                <p class="eyebrow">Stampbook</p>
+                <h2>Real blockchain infrastructure for the digital collectibles market.</h2>
+            </div>
+            <div class="footer-links">
+                <a href="/api/info">API Info</a>
+                <a href="/health">Health</a>
+                <a href="https://github.com/zedanazad43/stp" target="_blank" rel="noreferrer">Token Repository</a>
+                <a href="mailto:stampbook.contact@gmail.com">Contact</a>
+            </div>
+        </footer>
+    </div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script defer src="/app-helpers.js"></script>
+    <script defer src="/social-state.js"></script>
+    <script defer src="/social-notifications.js"></script>
+    <script defer src="/social-ui.js"></script>
+    <script defer src="/social-events.js"></script>
+    <script defer src="/social-core.js"></script>
+    <script defer src="/app.js"></script>
+
+    <div class="ai-assistant-shell" id="aiAssistantShell">
+        <button class="ai-toggle" id="aiToggleBtn" type="button" aria-label="Open customer AI assistant">
+            <i class="fa-solid fa-headset"></i>
+            <span>AI Support</span>
+        </button>
+        <section class="ai-panel" id="aiPanel" hidden>
+            <div class="ai-head">
+                <strong>Stampbook AI Assistant</strong>
+                <button id="aiCloseBtn" type="button" aria-label="Close assistant"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="ai-dock-body">
+                <aside class="ai-contacts" id="aiContacts">
+                    <button type="button" data-ai-contact="wallet transfers"><i class="fa-solid fa-wallet"></i><span>Wallet Desk</span></button>
+                    <button type="button" data-ai-contact="market purchase"><i class="fa-solid fa-store"></i><span>Market Ops</span></button>
+                    <button type="button" data-ai-contact="nft minting"><i class="fa-solid fa-cube"></i><span>NFT Support</span></button>
+                    <button type="button" data-ai-contact="account verification"><i class="fa-solid fa-shield"></i><span>Trust Center</span></button>
+                </aside>
+                <div class="ai-chat-main">
+                    <div class="ai-log" id="aiLog">
+                        <div class="ai-msg bot">Hello. I can help with wallets, purchases, NFT minting fees, and transaction troubleshooting.</div>
+                    </div>
+                    <form id="aiForm" class="ai-form">
+                        <input id="aiInput" placeholder="Ask about wallet, payments, NFT minting, or support..." required>
+                        <button class="button button-primary" type="submit">Send</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <button class="floating-compose" id="floatingComposeBtn" type="button" aria-label="Create post quickly" title="Create post">
+        <i class="fa-solid fa-pen"></i>
+    </button>
+</body>
+</html>
