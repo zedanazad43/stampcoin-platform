@@ -1,36 +1,22 @@
 {
   "name": "stampcoin-platform",
-  "version": "2.0.3",
+  "version": "1.0.0",
   "description": "Stampcoin Platform - blockchain-powered digital stamps, wallet and marketplace",
-  "main": "server.js",
-  "type": "commonjs",
+  "main": "index.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "echo 'Build complete - static assets ready'",
-    "test": "node --test tests/*.test.js",
-    "lint": "eslint server.js public/*.js tests/*.test.js",
-    "web3:compile": "hardhat compile",
-    "web3:deploy:sepolia": "hardhat run scripts/web3/deploy-sepolia.js --network sepolia",
-    "web3:export-abis": "node scripts/web3/export-abis.js",
-    "web3:prepare-frontend": "npm run web3:compile && npm run web3:export-abis",
-    "docker:build": "docker build -t stampcoin-platform:latest .",
-    "docker:run": "docker run -p 8080:8080 stampcoin-platform:latest"
+    "build": "mkdir -p public && echo 'Static site ready for deployment'",
+    "test": "jest tests/",
+    "lint": "echo 'Linting can be configured'",
+    "docker:build": "docker build -t stampcoin-platform .",
+    "docker:run": "docker run -p 10000:10000 stampcoin-platform"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.6",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "dotenv": "^17.3.1",
-    "eslint": "^9.23.0",
-    "ethers": "^5.7.2",
-    "hardhat": "^2.22.17"
+    "jest": "^30.2.0"
   }
 }

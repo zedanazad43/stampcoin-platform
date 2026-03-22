@@ -1,5 +1,0 @@
-app = "stampcoin-todo-sync"
-primary_region = "ord"
-
-[env]
-  SYNC_TOKEN = ""
